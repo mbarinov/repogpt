@@ -2,26 +2,81 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
-  color: var(--foreground);
-  background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+}
+
+@layer base {
+  :root {
+    --background: 30 20% 90%;
+    --foreground: 30 20% 10%;
+    --card: 30 20% 90%;
+    --card-foreground: 30 20% 10%;
+    --popover: 30 20% 90%;
+    --popover-foreground: 30 20% 10%;
+    --primary: 30 20% 10%;
+    --primary-foreground: 30 20% 90%;
+    --secondary: 30 20% 80%;
+    --secondary-foreground: 30 20% 10%;
+    --muted: 30 20% 80%;
+    --muted-foreground: 30 20% 50%;
+    --accent: 30 20% 80%;
+    --accent-foreground: 30 20% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 30 20% 70%;
+    --input: 30 20% 70%;
+    --ring: 30 20% 10%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+  }
+  .dark {
+    --background: 30 20% 10%;
+    --foreground: 30 20% 90%;
+    --card: 30 20% 10%;
+    --card-foreground: 30 20% 90%;
+    --popover: 30 20% 10%;
+    --popover-foreground: 30 20% 90%;
+    --primary: 30 20% 90%;
+    --primary-foreground: 30 20% 10%;
+    --secondary: 30 20% 20%;
+    --secondary-foreground: 30 20% 90%;
+    --muted: 30 20% 20%;
+    --muted-foreground: 30 20% 60%;
+    --accent: 30 20% 20%;
+    --accent-foreground: 30 20% 90%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 30 20% 20%;
+    --input: 30 20% 20%;
+    --ring: 30 20% 80%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  html, body {
+    height: 100%;
   }
 }
