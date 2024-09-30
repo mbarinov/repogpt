@@ -16,6 +16,7 @@
     "@langchain/core": "^0.3.3",
     "@langchain/openai": "^0.3.0",
     "@prisma/client": "5.20.0",
+    "@radix-ui/react-alert-dialog": "^1.1.1",
     "@radix-ui/react-icons": "^1.3.0",
     "@radix-ui/react-label": "^2.1.0",
     "@radix-ui/react-select": "^2.1.1",
