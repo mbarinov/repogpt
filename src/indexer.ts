@@ -1,11 +1,16 @@
 import { GithubRepoLoader } from "@langchain/community/document_loaders/web/github";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { OpenAIEmbeddings } from "@langchain/openai";
-import { Chroma } from "@langchain/community/vectorstores/chroma";
+import { PrismaVectorStore } from "@langchain/community/vectorstores/prisma";
+import { PrismaClient, Prisma, Document } from "@prisma/client";
+
 
 const run = async () => {
+    const db = new PrismaClient();
+    const REPO_NAME =  "https://github.com/mbarinov/aithelete";
+
     const loader = new GithubRepoLoader(
-        "https://github.com/mbarinov/aithelete",
+        REPO_NAME,
         {
             branch: "main",
             recursive: true,
@@ -53,15 +58,30 @@ const run = async () => {
         model: "text-embedding-3-small",
     });
 
-    const vectorStore = new Chroma(embeddings, {
-        collectionName: "aithelete",
-        url: "http://localhost:8000", // Optional, will default to this value
-        collectionMetadata: {
-            "hnsw:space": "cosine",
-        }, // Optional, can be used to specify the distance method of the embedding space https://docs.trychroma.com/usage-guide#changing-the-distance-function
+    const vectorStore = PrismaVectorStore.withModel<Document>(db).create(
+        embeddings,
+        {
+            prisma: Prisma,
+            tableName: "Document",
+            vectorColumnName: "vector",
+            columns: {
+                id: PrismaVectorStore.IdColumn,
+                content: PrismaVectorStore.ContentColumn,
+            }
+        }
+    );
+
+    await db.document.deleteMany({
+        where: { namespace: REPO_NAME }
     });
 
-    await vectorStore.addDocuments(chunks);
+    await vectorStore.addModels(
+        await db.$transaction(
+            chunks.map((chunk) =>
+                db.document.create({ data: { content: chunk.pageContent, namespace: REPO_NAME } })
+            )
+        )
+    );
 };
 
 run().catch(console.error);

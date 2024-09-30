@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client-js"
+  // previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  // extensions = [pgvector(map: "vector", schema: "extensions")]
+}
+
+model StoreSettings {
+  id                Int         @id @default(autoincrement())
+  openAiKey         String
+  githubAccessToken String
+  selectedRepo      Repository? @relation(fields: [selectedRepoId], references: [id])
+  selectedRepoId    String?     @unique
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  @@index([selectedRepoId])
+}
+
+model Document {
+  id        String                 @id @default(cuid())
+  content   String
+  namespace String?                @default("default")
+  vector    Unsupported("vector")?
+  createdAt DateTime               @default(now())
+  updatedAt DateTime               @updatedAt
+  // repository   Repository             @relation(fields: [repositoryId], references: [id])
+  // repositoryId String
+
+  @@index([namespace])
+}
+
+model Repository {
+  id            String           @id @default(cuid())
+  name          String           @unique
+  status        RepositoryStatus
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  storeSettings StoreSettings[]
+  // documents     Document[]
+
+  @@index([name])
+}
+
+enum RepositoryStatus {
+  IMPORTED
+  LOADING
+  NOT_STARTED
+}

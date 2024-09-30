@@ -1,14 +1,17 @@
 import {NextRequest, NextResponse} from "next/server";
 import {Message as VercelChatMessage} from "ai";
 
-import {ChatOpenAI, OpenAIEmbeddings} from "@langchain/openai";
+import {ChatOpenAI,
+    OpenAIEmbeddings
+} from "@langchain/openai";
 import {
     SystemMessagePromptTemplate
 } from "@langchain/core/prompts";
-import {Chroma} from "@langchain/community/vectorstores/chroma";
 import {RunnablePassthrough, RunnableSequence} from "@langchain/core/runnables";
-import {formatDocumentsAsString} from "langchain/util/document";
 import {HttpResponseOutputParser} from "langchain/output_parsers";
+import {PrismaVectorStore} from "@langchain/community/vectorstores/prisma";
+import {Document, Prisma, PrismaClient} from "@prisma/client";
+import {formatDocumentsAsString} from "langchain/util/document";
 
 const formatMessage = (message: VercelChatMessage) => {
     return `${message.role}: ${message.content}`;
@@ -17,6 +20,7 @@ const formatMessage = (message: VercelChatMessage) => {
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
+        const REPO_NAME =  "https://github.com/mbarinov/aithelete";
 
         const messages = body.messages ?? [];
         const formattedPreviousMessages = messages.slice(0, -1).map(formatMessage);
@@ -27,17 +31,30 @@ export async function POST(req: NextRequest) {
             temperature: 0
         });
 
+        const db = new PrismaClient();
         const embeddings = new OpenAIEmbeddings({
             model: "text-embedding-3-small",
         });
 
-        const vectorStore = new Chroma(embeddings, {
-            collectionName: "aithelete",
-            url: "http://localhost:8000",
-            collectionMetadata: {
-                "hnsw:space": "cosine",
-            },
-        });
+        const vectorStore = PrismaVectorStore.withModel<Document>(db).create(
+            embeddings,
+            {
+                prisma: Prisma,
+                tableName: "Document",
+                vectorColumnName: "vector",
+                columns: {
+                    id: PrismaVectorStore.IdColumn,
+                    content: PrismaVectorStore.ContentColumn,
+                },
+                filter: {
+                    namespace: {
+                        equals: REPO_NAME
+                    }
+                }
+            }
+        );
+
+
         const retriever = vectorStore.asRetriever({
             k: 6,
             searchType: "similarity"
