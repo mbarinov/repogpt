@@ -1,18 +1,7 @@
 import type {Metadata} from "next";
-import localFont from "next/font/local";
 import {ThemeProvider} from 'next-themes'
+import { Toaster } from "@/components/ui/toaster"
 import "./globals.css";
-
-const geistSans = localFont({
-    src: "./fonts/GeistVF.woff",
-    variable: "--font-geist-sans",
-    weight: "100 900",
-});
-const geistMono = localFont({
-    src: "./fonts/GeistMonoVF.woff",
-    variable: "--font-geist-mono",
-    weight: "100 900",
-});
 
 export const metadata: Metadata = {
     title: "CyberRepo",
@@ -27,12 +16,21 @@ export default function RootLayout({
     return (
         <html suppressHydrationWarning lang="en">
         <body
-            className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+            className={`antialiased`}
         >
         <ThemeProvider>
             <div className="p-4 md:p-8 lg:p-12 h-full">
-                {children}
+                <div
+                    className={`flex flex-col bg-beige-100 text-beige-900 h-full`}>
+                    <header className="p-4 flex justify-between items-center">
+                        <h1 className="text-2xl font-bold tracking-wider">CyberRepo</h1>
+                    </header>
+                    <main className="flex-grow">
+                        {children}
+                    </main>
+                </div>
             </div>
+            <Toaster />
         </ThemeProvider>
         </body>
         </html>

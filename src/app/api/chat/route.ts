@@ -25,15 +25,19 @@ export async function POST(req: NextRequest) {
         const messages = body.messages ?? [];
         const formattedPreviousMessages = messages.slice(0, -1).map(formatMessage);
         const currentMessageContent = messages[messages.length - 1].content;
+        const db = new PrismaClient();
+
+        const apiKey = (await db.storeSettings.findFirst())?.openAiKey;
 
         const llm = new ChatOpenAI({
             model: "gpt-4o-mini",
-            temperature: 0
+            temperature: 0,
+            apiKey
         });
 
-        const db = new PrismaClient();
         const embeddings = new OpenAIEmbeddings({
             model: "text-embedding-3-small",
+            apiKey
         });
 
         const vectorStore = PrismaVectorStore.withModel<Document>(db).create(
