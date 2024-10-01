@@ -1,5 +1,6 @@
 import {NextRequest, NextResponse} from "next/server";
 import {PrismaClient, RepositoryStatus} from "@prisma/client";
+import {Indexer} from '@/services/indexer';
 
 export async function POST(req: NextRequest) {
     try {
@@ -19,13 +20,17 @@ export async function POST(req: NextRequest) {
         // Get a name from the Github URL
         const name = url.split('/').slice(-2).join('/');
 
-        await db.repository.create({
+        const repository = await db.repository.create({
             data: {
                 name,
                 url,
                 status: RepositoryStatus.LOADING,
             },
         })
+
+        const indexer = new Indexer();
+
+        indexer.run(repository.id);
 
         return NextResponse.json({
             success: true, repository: {

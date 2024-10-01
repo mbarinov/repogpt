@@ -54,6 +54,8 @@ export async function POST(req: NextRequest) {
             apiKey
         });
 
+        console.log("Fetching documents for repository", repository.url);
+
         const vectorStore = PrismaVectorStore.withModel<Document>(db).create(
             embeddings,
             {
@@ -66,7 +68,7 @@ export async function POST(req: NextRequest) {
                 },
                 filter: {
                     namespace: {
-                        equals: repository?.url
+                        equals: repository?.id
                     }
                 }
             }
@@ -93,7 +95,10 @@ export async function POST(req: NextRequest) {
         const chain = RunnableSequence.from([
             RunnablePassthrough.assign({
                 context: async (input) => {
-                    return await retriever.pipe(formatDocumentsAsString).invoke(input.question as string);
+                    const docs = await retriever.pipe(formatDocumentsAsString).invoke(input.question as string);
+
+                    console.log("Retrieved documents", docs);
+                    return docs;
                 },
                 question: async (input) => {
                     return input.question;
