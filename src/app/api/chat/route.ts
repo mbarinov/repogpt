@@ -1,7 +1,8 @@
 import {NextRequest, NextResponse} from "next/server";
 import {Message as VercelChatMessage} from "ai";
 
-import {ChatOpenAI,
+import {
+    ChatOpenAI,
     OpenAIEmbeddings
 } from "@langchain/openai";
 import {
@@ -20,14 +21,27 @@ const formatMessage = (message: VercelChatMessage) => {
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
-        const REPO_NAME =  "https://github.com/mbarinov/aithelete";
 
         const messages = body.messages ?? [];
+        const repositoryId = body.selectedRepoId;
         const formattedPreviousMessages = messages.slice(0, -1).map(formatMessage);
         const currentMessageContent = messages[messages.length - 1].content;
         const db = new PrismaClient();
 
         const apiKey = (await db.storeSettings.findFirst())?.openAiKey;
+        const repository = await db.repository.findUnique({
+            where: {
+                id: repositoryId
+            }
+        });
+
+        if (!apiKey) {
+            throw new Error("OpenAI API key is required");
+        }
+
+        if (!repository) {
+            throw new Error("Repository not found");
+        }
 
         const llm = new ChatOpenAI({
             model: "gpt-4o-mini",
@@ -52,7 +66,7 @@ export async function POST(req: NextRequest) {
                 },
                 filter: {
                     namespace: {
-                        equals: REPO_NAME
+                        equals: repository?.url
                     }
                 }
             }

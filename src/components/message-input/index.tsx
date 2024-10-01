@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import {Button} from "@/components/ui/button";
 import {Send} from 'lucide-react';
+import {Repository} from "@prisma/client";
 
 interface MessageInputProps {
     input: string;
@@ -20,6 +21,9 @@ interface MessageInputProps {
     isLoading: boolean;
     hasMessages: boolean;
     onClear?: () => void;
+    repositories: Repository[];
+    selectedRepoId: string | null;
+    onSelectedRepoIdChange?: (repoId: string) => void;
 }
 
 export function MessageInput({
@@ -28,9 +32,12 @@ export function MessageInput({
                                  handleSubmit,
                                  isLoading,
                                  hasMessages,
-                                 onClear
+                                 onClear,
+                                 repositories,
+                                 selectedRepoId,
+                                 onSelectedRepoIdChange
                              }: MessageInputProps) {
-
+    const defaultRepo = repositories[0]?.id;
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.key === 'Enter' && !e.shiftKey && input.trim()) {
             e.preventDefault();
@@ -49,16 +56,20 @@ export function MessageInput({
                 className={`flex-grow mr-2 bg-white text-gray-800 border border-gray-300 rounded-lg shadow-sm ${hasMessages ? '' : 'text-lg p-4'}`}
             />
             <div className="flex items-center justify-between gap-2">
-                <Select defaultValue={"@mbarinov/aithelete"}>
+                <Select value={selectedRepoId || ''} onValueChange={(nextRepo) => {
+                    onSelectedRepoIdChange?.(nextRepo);
+                }} defaultValue={defaultRepo}>
                     <SelectTrigger className="w-[180px]">
                         <SelectValue placeholder="Select a repo"/>
                     </SelectTrigger>
                     <SelectContent>
                         <SelectGroup>
                             <SelectLabel>Available repositories:</SelectLabel>
-                            <SelectItem
-                                value="@mbarinov/aithelete">@mbarinov/aithelete</SelectItem>
-                            <SelectItem value="banana">Banana</SelectItem>
+                            {repositories.map(repo => (
+                                <SelectItem
+                                    key={repo.id}
+                                    value={repo.id}>{repo.name}</SelectItem>
+                            ))}
                         </SelectGroup>
                         <SelectSeparator/>
                     </SelectContent>
