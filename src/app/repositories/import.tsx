@@ -4,11 +4,18 @@ import {Input} from '@/components/ui/input'
 import {useToast} from '@/hooks/use-toast'
 
 interface ImportProps {
-    onImport: (repoUrl: string) => void
+    onImport: ({
+                   url,
+                   branch
+               }: {
+        url: string;
+        branch: string;
+    }) => void
 }
 
 export function Import({onImport}: ImportProps) {
     const [repoUrl, setRepoUrl] = React.useState<string>('');
+    const [branch, setBranch] = React.useState<string>('main');
     const [isLoading, setIsLoading] = React.useState<boolean>(false);
     const {toast} = useToast()
 
@@ -29,7 +36,11 @@ export function Import({onImport}: ImportProps) {
         try {
             setIsLoading(true)
 
-            await onImport(repoUrl);
+            onImport({
+                url: repoUrl,
+                branch,
+            });
+
             setRepoUrl('')
 
             toast({
@@ -62,6 +73,14 @@ export function Import({onImport}: ImportProps) {
                     placeholder="Enter GitHub repo URL"
                     value={repoUrl}
                     onChange={(e) => setRepoUrl(e.target.value)}
+                />
+                <Input
+                    type="text"
+                    disabled={isLoading}
+                    placeholder="Enter branch"
+                    value={branch}
+                    onChange={(e) => setBranch(e.target.value)}
+                    className="w-24"
                 />
                 <Button disabled={isLoading}
                         onClick={handleImport}>Import</Button>

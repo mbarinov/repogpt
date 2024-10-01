@@ -3,20 +3,23 @@ import {PrismaClient, RepositoryStatus} from "@prisma/client";
 import {Indexer} from '@/services/indexer';
 
 export async function POST(req: NextRequest) {
+    const db = new PrismaClient();
+
     try {
         const body = await req.json();
 
         const {
             url,
+            branch,
         } = body as {
             url: string;
+            branch?: string;
         };
 
         if (!url) {
             throw new Error("URL is required");
         }
 
-        const db = new PrismaClient();
         // Get a name from the Github URL
         const name = url.split('/').slice(-2).join('/');
 
@@ -30,7 +33,7 @@ export async function POST(req: NextRequest) {
 
         const indexer = new Indexer();
 
-        indexer.run(repository.id);
+        indexer.run(repository.id, branch);
 
         return NextResponse.json({
             success: true, repository: {

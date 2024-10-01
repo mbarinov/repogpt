@@ -8,7 +8,6 @@ import {
     SelectTrigger,
     SelectLabel,
     SelectValue,
-    SelectSeparator
 } from "@/components/ui/select";
 import {Button} from "@/components/ui/button";
 import {Send} from 'lucide-react';
@@ -37,7 +36,6 @@ export function MessageInput({
                                  selectedRepoId,
                                  onSelectedRepoIdChange
                              }: MessageInputProps) {
-    const defaultRepo = repositories[0]?.id;
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.key === 'Enter' && !e.shiftKey && input.trim()) {
             e.preventDefault();
@@ -57,8 +55,11 @@ export function MessageInput({
             />
             <div className="flex items-center justify-between gap-2">
                 <Select value={selectedRepoId || ''} onValueChange={(nextRepo) => {
-                    onSelectedRepoIdChange?.(nextRepo);
-                }} defaultValue={defaultRepo}>
+                    if(nextRepo) {
+                        onSelectedRepoIdChange?.(nextRepo);
+                        onClear?.();
+                    }
+                }}>
                     <SelectTrigger className="w-[180px]">
                         <SelectValue placeholder="Select a repo"/>
                     </SelectTrigger>
@@ -71,7 +72,6 @@ export function MessageInput({
                                     value={repo.id}>{repo.name}</SelectItem>
                             ))}
                         </SelectGroup>
-                        <SelectSeparator/>
                     </SelectContent>
                 </Select>
                 <div className="flex flex-row gap-2">

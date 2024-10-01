@@ -9,7 +9,7 @@ interface RepoPageProps {
     list: Repository[]
 }
 
-export function RepoPage(props : RepoPageProps) {
+export function RepoPage(props: RepoPageProps) {
     const [repos, setRepos] = React.useState(props.list);
 
     async function fetchRepos() {
@@ -33,14 +33,21 @@ export function RepoPage(props : RepoPageProps) {
         setRepos(data.repositories);
     }
 
-    const handleImport = async (repoUrl: string) => {
+    const handleImport = async ({
+                                    url,
+                                    branch
+                                }: {
+        url: string;
+        branch: string;
+    }) => {
         const response = await fetch('/api/repositories', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                url: repoUrl
+                url,
+                branch
             })
         });
 
@@ -70,12 +77,13 @@ export function RepoPage(props : RepoPageProps) {
 
     return (
         <div className="flex flex-col w-full gap-4">
-                <Import onImport={handleImport}/>
-                <List
-                    repos={repos}
-                    onDelete={handleDelete}
-                    onChatOpen={() => {}}
-                />
+            <Import onImport={handleImport}/>
+            <List
+                repos={repos}
+                onDelete={handleDelete}
+                onChatOpen={() => {
+                }}
+            />
         </div>
     )
 }

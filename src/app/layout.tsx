@@ -21,7 +21,7 @@ export default function RootLayout({
         <ThemeProvider>
             <div className="p-4 md:p-8 lg:p-12 h-full">
                 <div
-                    className={`flex flex-col bg-beige-100 text-beige-900 h-full`}>
+                    className="flex flex-col bg-beige-100 text-beige-900 h-full">
                     <header className="p-4 flex justify-between items-center">
                         <h1 className="text-2xl font-bold tracking-wider">CyberRepo</h1>
                     </header>

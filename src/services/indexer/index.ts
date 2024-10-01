@@ -1,9 +1,11 @@
-import { GithubRepoLoader } from "@langchain/community/document_loaders/web/github";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-import { OpenAIEmbeddings } from "@langchain/openai";
-import { PrismaVectorStore } from "@langchain/community/vectorstores/prisma";
-import { Prisma, RepositoryStatus, PrismaClient, Document } from "@prisma/client";
-import { Document as LangchainDocument } from "langchain/document"; // Adjust the import path if necessary
+import {
+    GithubRepoLoader
+} from "@langchain/community/document_loaders/web/github";
+import {RecursiveCharacterTextSplitter} from "langchain/text_splitter";
+import {OpenAIEmbeddings} from "@langchain/openai";
+import {PrismaVectorStore} from "@langchain/community/vectorstores/prisma";
+import {Prisma, RepositoryStatus, PrismaClient, Document} from "@prisma/client";
+import {Document as LangchainDocument} from "langchain/document"; // Adjust the import path if necessary
 import prisma from '@/lib/prisma';
 
 /**
@@ -46,19 +48,26 @@ export class Indexer {
      * Executes the indexing process for a given repository ID.
      * @param repoId - The ID of the repository to index.
      */
-    public async run(repoId: string) {
+    public async run(repoId: string, branch: string = "main") {
         console.log(`[${new Date().toISOString()}] Starting indexing for repository ID: ${repoId}`);
 
         try {
             const repository = await this.getRepository(repoId);
-            const docs = await this.loadDocuments(repository.url);
+            const docs = await this.loadDocuments(repository.url, branch);
             const chunks = await this.splitDocuments(docs);
 
-            // Pass both repository.id and repository.url
             await this.storeChunks(chunks, repository.id, repository.url);
 
             console.log(`[${new Date().toISOString()}] Indexing completed successfully for repository ID: ${repoId}`);
         } catch (error) {
+            this.db.repository.update({
+                where: {
+                    id: repoId,
+                },
+                data: {
+                    status: RepositoryStatus.NOT_STARTED
+                }
+            })
             console.error(`[${new Date().toISOString()}] Error during indexing for repository ID ${repoId}:`, error);
         }
     }
@@ -71,7 +80,7 @@ export class Indexer {
      */
     private async getRepository(repoId: string) {
         const repository = await this.db.repository.findUnique({
-            where: { id: repoId }
+            where: {id: repoId}
         });
 
         if (!repository) {
@@ -88,7 +97,7 @@ export class Indexer {
      */
     private async getGithubAccessToken(): Promise<string> {
         const settings = await this.db.storeSettings.findFirst({
-            orderBy: { createdAt: 'desc' } // Ensures the latest settings are fetched
+            orderBy: {createdAt: 'desc'} // Ensures the latest settings are fetched
         });
 
         const accessToken = settings?.githubAccessToken;
@@ -107,7 +116,7 @@ export class Indexer {
      */
     private async getOpenAiToken(): Promise<string> {
         const settings = await this.db.storeSettings.findFirst({
-            orderBy: { createdAt: 'desc' } // Ensures the latest settings are fetched
+            orderBy: {createdAt: 'desc'} // Ensures the latest settings are fetched
         });
 
         const openAiKey = settings?.openAiKey;
@@ -196,7 +205,7 @@ export class Indexer {
         try {
             // Delete existing documents with the same namespace (Repository.id)
             await this.db.document.deleteMany({
-                where: { namespace }
+                where: {namespace}
             });
             console.log(`[${new Date().toISOString()}] Deleted existing documents in namespace: ${namespace}`);
 
@@ -220,8 +229,8 @@ export class Indexer {
 
             // Update the repository status using repoUrl
             await this.db.repository.update({
-                where: { url: repoUrl },
-                data: { status: RepositoryStatus.IMPORTED }
+                where: {url: repoUrl},
+                data: {status: RepositoryStatus.IMPORTED}
             });
             console.log(`[${new Date().toISOString()}] Updated repository status to IMPORTED for URL: ${repoUrl}`);
         } catch (error) {
@@ -229,8 +238,8 @@ export class Indexer {
 
             // Update the repository status to NOT_STARTED in case of error
             await this.db.repository.update({
-                where: { url: repoUrl },
-                data: { status: RepositoryStatus.NOT_STARTED }
+                where: {url: repoUrl},
+                data: {status: RepositoryStatus.NOT_STARTED}
             });
             console.log(`[${new Date().toISOString()}] Updated repository status to NOT_STARTED for URL: ${repoUrl}`);
 

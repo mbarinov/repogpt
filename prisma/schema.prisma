@@ -39,7 +39,6 @@ model Repository {
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
   storeSettings StoreSettings[]
-  // documents     Document[]
   Document      Document[]
 
   @@index([url])

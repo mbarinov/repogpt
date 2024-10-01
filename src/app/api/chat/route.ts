@@ -1,13 +1,8 @@
 import {NextRequest, NextResponse} from "next/server";
 import {Message as VercelChatMessage} from "ai";
 
-import {
-    ChatOpenAI,
-    OpenAIEmbeddings
-} from "@langchain/openai";
-import {
-    SystemMessagePromptTemplate
-} from "@langchain/core/prompts";
+import {ChatOpenAI, OpenAIEmbeddings} from "@langchain/openai";
+import {SystemMessagePromptTemplate} from "@langchain/core/prompts";
 import {RunnablePassthrough, RunnableSequence} from "@langchain/core/runnables";
 import {HttpResponseOutputParser} from "langchain/output_parsers";
 import {PrismaVectorStore} from "@langchain/community/vectorstores/prisma";
@@ -54,8 +49,6 @@ export async function POST(req: NextRequest) {
             apiKey
         });
 
-        console.log("Fetching documents for repository", repository.url);
-
         const vectorStore = PrismaVectorStore.withModel<Document>(db).create(
             embeddings,
             {
@@ -95,10 +88,7 @@ export async function POST(req: NextRequest) {
         const chain = RunnableSequence.from([
             RunnablePassthrough.assign({
                 context: async (input) => {
-                    const docs = await retriever.pipe(formatDocumentsAsString).invoke(input.question as string);
-
-                    console.log("Retrieved documents", docs);
-                    return docs;
+                    return await retriever.pipe(formatDocumentsAsString).invoke(input.question as string);
                 },
                 question: async (input) => {
                     return input.question;
