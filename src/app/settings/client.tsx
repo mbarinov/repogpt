@@ -1,6 +1,7 @@
 'use client'
 
 import {useState} from 'react'
+import Link from 'next/link'
 import {Button} from "@/components/ui/button"
 import {Input} from "@/components/ui/input"
 import {Label} from "@/components/ui/label"
@@ -124,8 +125,15 @@ export function ConfigurationForm(props: ConfigurationFormProps) {
                         Tokens</a>.</p>
             </div>
 
-            <Button type="submit"
-                    className="w-full bg-blue-600 text-white hover:bg-blue-700">Save</Button>
+            <div className="flex flex-col gap-4">
+                <Button type="submit"
+                        className="w-full bg-blue-600 text-white hover:bg-blue-700">Save</Button>
+                <Link href="/repositories">
+                    <Button type="button"
+                            className="w-full bg-gray-400 text-white hover:bg-gray-500">Import
+                        Repos</Button>
+                </Link>
+            </div>
         </form>
     );
 }
