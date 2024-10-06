@@ -1,8 +1,15 @@
+import {redirect} from "next/navigation";
 import {PrismaClient} from '@prisma/client'
 import {RepoPage} from './index'
 
 export default async function ReposPage() {
     const db = new PrismaClient();
+
+    const settings = await  db.storeSettings.findFirst();
+
+    if(!settings?.openAiKey || !settings?.githubAccessToken) {
+        redirect('/settings');
+    }
 
     const list = await db.repository.findMany();
 
