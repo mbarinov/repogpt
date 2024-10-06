@@ -45,7 +45,7 @@ export function MessageInput({
 
     return (
         <form onSubmit={handleSubmit}
-              className={`flex flex-col gap-4 p-6 bg-white shadow-lg ${hasMessages ? 'w-full lg:max-w-4xl mx-auto fixed bottom-0 left-0 right-0 rounded-tl-2xl rounded-tr-2xl' : 'flex items-stretch justify-center w-full lg:w-1/3 rounded-2xl'}`}>
+              className={`flex flex-col gap-4 p-6 bg-white shadow-lg ${hasMessages ? 'w-full lg:max-w-4xl mx-auto fixed bottom-0 left-0 right-0 rounded-tl-2xl rounded-tr-2xl' : 'flex items-stretch justify-center w-full lg:w-2/5 rounded-2xl'}`}>
             <Textarea
                 placeholder="Ask me anything about your repo"
                 value={input}
@@ -60,7 +60,7 @@ export function MessageInput({
                         onClear?.();
                     }
                 }}>
-                    <SelectTrigger className="w-[180px]">
+                    <SelectTrigger className="w-[240px]">
                         <SelectValue placeholder="Select a repo"/>
                     </SelectTrigger>
                     <SelectContent>
