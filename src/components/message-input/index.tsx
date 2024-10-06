@@ -43,6 +43,9 @@ export function MessageInput({
         }
     };
 
+    const examples = ["What's the tech stack?", "How to set up" +
+    " the project?", "How to deploy the project?"];
+
     return (
         <form onSubmit={handleSubmit}
               className={`flex flex-col gap-4 p-6 bg-white shadow-lg ${hasMessages ? 'w-full lg:max-w-4xl mx-auto fixed bottom-0 left-0 right-0 rounded-tl-2xl rounded-tr-2xl' : 'flex items-stretch justify-center w-full lg:w-2/5 rounded-2xl'}`}>
@@ -53,13 +56,25 @@ export function MessageInput({
                 onKeyDown={handleKeyDown}
                 className={`flex-grow mr-2 bg-white text-gray-800 border border-gray-300 rounded-lg shadow-sm ${hasMessages ? '' : 'text-lg p-4'}`}
             />
+            {!hasMessages && examples.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                    {examples.map((example, index) => (
+                        <div key={index}
+                             className="bg-gray-200 text-gray-800 px-3 py-1 rounded-full text-sm cursor-pointer"
+                             onClick={() => handleInputChange({target: {value: example}} as React.ChangeEvent<HTMLTextAreaElement>)}>
+                            {example}
+                        </div>
+                    ))}
+                </div>
+            )}
             <div className="flex items-center justify-between gap-2">
-                <Select value={selectedRepoId || ''} onValueChange={(nextRepo) => {
-                    if(nextRepo) {
-                        onSelectedRepoIdChange?.(nextRepo);
-                        onClear?.();
-                    }
-                }}>
+                <Select value={selectedRepoId || ''}
+                        onValueChange={(nextRepo) => {
+                            if (nextRepo) {
+                                onSelectedRepoIdChange?.(nextRepo);
+                                onClear?.();
+                            }
+                        }}>
                     <SelectTrigger className="w-[240px]">
                         <SelectValue placeholder="Select a repo"/>
                     </SelectTrigger>
