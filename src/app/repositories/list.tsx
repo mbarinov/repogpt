@@ -1,5 +1,6 @@
 import React from 'react'
-import { Button } from '@/components/ui/button'
+import Link from 'next/link'
+import {Button} from '@/components/ui/button'
 import {
     AlertDialog,
     AlertDialogAction,
@@ -11,57 +12,64 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Loader2, CheckCircle, Trash2, MessageSquare } from 'lucide-react'
-import { Repository, RepositoryStatus } from '@prisma/client'
+import {Loader2, CheckCircle, Trash2, MessageSquare} from 'lucide-react'
+import {Repository, RepositoryStatus} from '@prisma/client'
 
 interface ListProps {
     repos: Repository[]
     onDelete: (id: string) => void
-    onChatOpen: (repo: Repository) => void
 }
 
-export function List({ repos, onDelete, onChatOpen }: ListProps) {
+export function List({repos, onDelete}: ListProps) {
     return (
         <div className="space-y-4">
             <h2 className="text-xl font-semibold">Your Repositories</h2>
             <ul className="space-y-4">
                 {repos.map((repo) => (
-                    <li key={repo.id} className="flex items-center justify-between p-4 bg-white rounded-lg shadow">
+                    <li key={repo.id}
+                        className="flex items-center justify-between p-4 bg-white rounded-lg shadow">
                         <div className="flex items-center space-x-4">
                             <span className="font-medium">{repo.name}</span>
                             {repo.status === RepositoryStatus.LOADING ? (
-                                <Loader2 className="animate-spin text-blue-500" size={20} />
+                                <Loader2 className="animate-spin text-blue-500"
+                                         size={20}/>
                             ) : (
-                                <CheckCircle className="text-green-500" size={20} />
+                                <CheckCircle className="text-green-500"
+                                             size={20}/>
                             )}
                         </div>
                         <div className="flex space-x-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => onChatOpen(repo)}
-                                disabled={repo.status === RepositoryStatus.LOADING}
-                            >
-                                <MessageSquare className="mr-2" size={16} />
-                                Chat
-                            </Button>
+                            <Link href={`/?repoId=${repo.id}`}>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={repo.status === RepositoryStatus.LOADING}
+                                >
+                                    <MessageSquare className="mr-2" size={16}/>
+                                    Chat
+                                </Button>
+                            </Link>
                             <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                     <Button variant="destructive" size="sm">
-                                        <Trash2 size={16} />
+                                        <Trash2 size={16}/>
                                     </Button>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
                                     <AlertDialogHeader>
-                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                        <AlertDialogTitle>Are you
+                                            sure?</AlertDialogTitle>
                                         <AlertDialogDescription>
-                                            This action cannot be undone. This will permanently delete the repository
+                                            This action cannot be undone. This
+                                            will permanently delete the
+                                            repository
                                             and remove all associated data.
                                         </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
                                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => onDelete(repo.id)}>
+                                        <AlertDialogAction
+                                            onClick={() => onDelete(repo.id)}>
                                             Delete
                                         </AlertDialogAction>
                                     </AlertDialogFooter>

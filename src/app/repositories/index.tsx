@@ -81,8 +81,6 @@ export function RepoPage(props: RepoPageProps) {
             <List
                 repos={repos}
                 onDelete={handleDelete}
-                onChatOpen={() => {
-                }}
             />
         </div>
     )

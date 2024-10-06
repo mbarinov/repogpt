@@ -7,6 +7,7 @@ import {MessageList} from '@/components/message-list';
 import {MessageInput} from '@/components/message-input';
 
 interface ChatProps {
+    defaultRepoId?: string,
     repositories: Repository[]
 }
 
@@ -32,10 +33,12 @@ export function Chat(props: ChatProps) {
     });
 
     useEffect(() => {
-        if (props.repositories.length > 0) {
+        if (props.defaultRepoId) {
+            setSelectedRepoId(props.defaultRepoId);
+        } else if (props.repositories.length > 0) {
             setSelectedRepoId(props.repositories[0].id);
         }
-    }, [props.repositories]);
+    }, [props.defaultRepoId, props.repositories]);
 
     return (
         <div className="flex flex-col h-full">
