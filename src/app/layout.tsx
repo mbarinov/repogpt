@@ -1,11 +1,18 @@
-import type {Metadata} from "next";
-import {ThemeProvider} from 'next-themes'
-import { Toaster } from "@/components/ui/toaster"
+import type { Metadata } from "next";
+import { ThemeProvider } from 'next-themes';
+import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
+import {Header} from "@/components/header";
+import { Poppins } from 'next/font/google';
+
+const poppins = Poppins({
+    subsets: ['latin'],
+    weight: ['400', '600', '700'],
+});
 
 export const metadata: Metadata = {
     title: "CyberRepo",
-    description: "Talk with your repositories"
+    description: "Talk with your repositories",
 };
 
 export default function RootLayout({
@@ -15,21 +22,12 @@ export default function RootLayout({
 }>) {
     return (
         <html suppressHydrationWarning lang="en">
-        <body
-            className={`antialiased`}
-        >
-        <ThemeProvider>
-            <div className="p-4 md:p-8 lg:p-12 h-full">
-                <div
-                    className="flex flex-col bg-beige-100 text-beige-900 h-full">
-                    <header className="p-4 flex justify-between items-center">
-                        <h1 className="text-2xl font-bold tracking-wider">CyberRepo</h1>
-                    </header>
-                    <main className="flex-grow">
-                        {children}
-                    </main>
-                </div>
-            </div>
+        <body className={`${poppins.className} antialiased beige-100 text-beige-900`}>
+        <ThemeProvider attribute="class">
+            <Header />
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                {children}
+            </main>
             <Toaster />
         </ThemeProvider>
         </body>
