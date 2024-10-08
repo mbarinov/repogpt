@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    output: 'standalone',
     webpack: (config) => {
         // Add these lines to exclude .node files from being processed by webpack
         config.module.rules.push({

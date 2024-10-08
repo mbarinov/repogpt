@@ -7,12 +7,12 @@ import { MenuIcon, XIcon } from 'lucide-react';
 export const Header = () => {
     const [menuOpen, setMenuOpen] = useState(false);
     return (
-        <header className="bg-white dark:bg-gray-800 shadow-md">
+        <header className="sticky top-0 bg-white dark:bg-gray-800 shadow-md z-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between h-16">
                     <div className="flex-shrink-0 flex items-center">
                         <Link href="/">
-                            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">CyberRepo</h1>
+                            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">repogpt</h1>
                         </Link>
                     </div>
 

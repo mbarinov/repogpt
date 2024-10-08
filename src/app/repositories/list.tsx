@@ -30,6 +30,9 @@ export function List({repos, onDelete}: ListProps) {
                         className="flex items-center justify-between p-4 bg-white rounded-lg shadow">
                         <div className="flex items-center space-x-4">
                             <span className="font-medium">{repo.name}</span>
+                            {repo.status === RepositoryStatus.ERROR && (
+                                <span className="text-red-500">Error: {repo?.error}</span>
+                            )}
                             {repo.status === RepositoryStatus.LOADING ? (
                                 <Loader2 className="animate-spin text-blue-500"
                                          size={20}/>
@@ -43,7 +46,7 @@ export function List({repos, onDelete}: ListProps) {
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    disabled={repo.status === RepositoryStatus.LOADING}
+                                    disabled={repo.status !== RepositoryStatus.IMPORTED}
                                 >
                                     <MessageSquare className="mr-2" size={16}/>
                                     Chat

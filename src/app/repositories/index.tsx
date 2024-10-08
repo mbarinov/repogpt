@@ -25,7 +25,7 @@ export function RepoPage(props: RepoPageProps) {
         const hasLoading = repositories.some(repo => repo.status === RepositoryStatus.LOADING);
 
         if (hasLoading) {
-            setTimeout(fetchRepos, 1000);
+            setTimeout(fetchRepos, 3000);
         } else {
             setRepos(repositories);
         }

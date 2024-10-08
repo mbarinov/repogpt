@@ -65,10 +65,12 @@ export class Indexer {
                     id: repoId,
                 },
                 data: {
-                    status: RepositoryStatus.NOT_STARTED
+                    error: (error as Error).message,
+                    status: RepositoryStatus.ERROR
                 }
+            }).then(() => {
+                console.error(`[${new Date().toISOString()}] Error during indexing for repository ID ${repoId}:`, error);
             })
-            console.error(`[${new Date().toISOString()}] Error during indexing for repository ID ${repoId}:`, error);
         }
     }
 
@@ -230,7 +232,7 @@ export class Indexer {
             // Update the repository status using repoUrl
             await this.db.repository.update({
                 where: {url: repoUrl},
-                data: {status: RepositoryStatus.IMPORTED}
+                data: {status: RepositoryStatus.IMPORTED, error: null}
             });
             console.log(`[${new Date().toISOString()}] Updated repository status to IMPORTED for URL: ${repoUrl}`);
         } catch (error) {

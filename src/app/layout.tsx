@@ -11,7 +11,7 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-    title: "CyberRepo",
+    title: "repogpt",
     description: "Talk with your repositories",
 };
 
@@ -25,7 +25,7 @@ export default function RootLayout({
         <body className={`${poppins.className} antialiased beige-100 text-beige-900`}>
         <ThemeProvider attribute="class">
             <Header />
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 h-full">
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 lg:pt-20 h-full">
                 {children}
             </main>
             <Toaster />

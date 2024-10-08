@@ -45,7 +45,7 @@ export function Import({onImport}: ImportProps) {
 
             toast({
                 title: "Success",
-                description: "Repository import started.",
+                description: "Repository import started. It may take a few minutes.",
             });
         } catch (e) {
             const error = e as { message: string; status?: number };

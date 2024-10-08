@@ -23,7 +23,7 @@ export default async function SettingsPage() {
                 <ConfigurationForm githubAccessToken={settings?.githubAccessToken} openAiKey={settings?.openAiKey}/>
                 <div className="text-center">
                     <Link
-                        href="https://github.com/yourusername/cyberrepo"
+                        href="https://github.com/yourusername/repogpt"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center text-beige-800 hover:text-beige-900 hover:underline"

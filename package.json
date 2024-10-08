@@ -1,14 +1,12 @@
 {
-  "name": "cyberpepo",
+  "name": "repogpt",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbo",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "indexer": "npx tsx --env-file=.env src/indexer.ts",
-    "retriver": "npx tsx --env-file=.env src/retriver.ts"
+    "lint": "next lint"
   },
   "packageManager": "pnpm@9.2.0",
   "dependencies": {
