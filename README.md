@@ -94,10 +94,9 @@ Once running, the app will be available at `http://localhost:3000`. You can now 
 
 ## Roadmap
 
-- [ ] Support for private repositories
 - [ ] Advanced query capabilities for specific file analysis
+- [ ] Improve integration with GitHub
 - [ ] Integration with other version control systems (e.g., GitLab, Bitbucket)
-- [ ] Enhanced AI interaction features (e.g., intelligent pull request reviews)
 
 ## Contributing
 
