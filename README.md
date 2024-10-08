@@ -7,8 +7,6 @@ RepoGPT is an open-source tool that enables developers to interact with their Gi
 - [Demo](#demo)
 - [Prerequisites](#prerequisites)
 - [Installation Guide](#installation-guide)
-- [Configuration](#configuration)
-- [Running Tests](#running-tests)
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
 - [License](#license)
