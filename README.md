@@ -34,6 +34,7 @@ Before starting, ensure you have the following:
 - [pnpm](https://pnpm.io/) (preferred package manager)
 - [Docker](https://www.docker.com/) (for database setup)
 - PostgreSQL with the pgvector extension installed (ankane/pgvector)
+- [OpenAI API](https://platform.openai.com/) keys for interacting with ChatGPT-4o models and embedding models.
 
 ## Installation Guide
 
