@@ -30,17 +30,17 @@ Here’s a look at RepoGPT in action:
 ## Prerequisites
 
 Before starting, ensure you have the following:
-- [Node.js](https://nodejs.org/) (v16 or higher)
+- [Node.js](https://nodejs.org/) (v18 or higher)
 - [pnpm](https://pnpm.io/) (preferred package manager)
 - [Docker](https://www.docker.com/) (for database setup)
-- PostgreSQL with the pgvector extension installed
+- PostgreSQL with the pgvector extension installed (ankane/pgvector)
 
 ## Installation Guide
 
 ### 1. Clone the Repository
 ```bash
 git clone https://github.com/mbarinov/repogpt
-cd RepoGPT
+cd repogpt
 ```
 
 ### 2. Install Dependencies
@@ -93,6 +93,7 @@ Once running, the app will be available at `http://localhost:3000`. You can now 
 ## Roadmap
 
 - [ ] Advanced query capabilities for specific file analysis
+- [ ] Add LangGraph AI ReAct Agent for a deeper analysys
 - [ ] Improve integration with GitHub
 - [ ] Integration with other version control systems (e.g., GitLab, Bitbucket)
 
