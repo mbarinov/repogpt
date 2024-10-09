@@ -150,7 +150,7 @@ This project is licensed under the [MIT License](LICENSE).
 
 ---
 
-*Made with ❤️ by [Your Name](https://github.com/mbarinov)*
+*Made with ❤️ by [Max Barinov](https://maxbarinov.com)*
 
 ---
 
