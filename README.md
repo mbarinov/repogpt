@@ -93,7 +93,7 @@ DATABASE_URL=postgresql://postgres:yourpassword@localhost:5432/repogpt
 Use Prisma to push the necessary database schema:
 
 ```bash
-npx prisma db push
+npx prisma migrate dev
 ```
 
 ### 6. Build and Start the Application
