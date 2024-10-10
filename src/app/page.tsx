@@ -8,6 +8,8 @@ interface ChatPageProps {
     }
 }
 
+export const dynamic = 'force-dynamic'
+
 export default async function ChatPage({
                                            searchParams
                                        }: ChatPageProps) {

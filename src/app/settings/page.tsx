@@ -5,6 +5,7 @@ import {
 } from './client';
 import {PrismaClient} from "@prisma/client";
 
+export const dynamic = 'force-dynamic'
 
 export default async function SettingsPage() {
     const db = new PrismaClient();

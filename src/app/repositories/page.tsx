@@ -2,6 +2,8 @@ import {redirect} from "next/navigation";
 import {PrismaClient} from '@prisma/client'
 import {RepoPage} from './index'
 
+export const dynamic = 'force-dynamic'
+
 export default async function ReposPage() {
     const db = new PrismaClient();
 
