@@ -215,9 +215,8 @@ export class Indexer {
             const createPromises = chunks.map(chunk =>
                 this.db.document.create({
                     data: {
-                        content: chunk.pageContent,
+                        content: sanitizeString(chunk.pageContent),
                         namespace
-                        // If your Prisma schema requires other fields (e.g., id), Prisma will handle defaults
                     }
                 })
             );
@@ -248,4 +247,8 @@ export class Indexer {
             throw error; // Re-throw to allow upstream handling if necessary
         }
     }
+}
+
+function sanitizeString(input: string): string {
+    return input.replace(/\0/g, ''); // Removes all null bytes
 }
