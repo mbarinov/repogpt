@@ -1,8 +1,9 @@
 import {NextRequest, NextResponse} from "next/server";
 import {Message as VercelChatMessage} from "ai";
 
-import {ChatOpenAI, OpenAIEmbeddings} from "@langchain/openai";
-import {SystemMessagePromptTemplate} from "@langchain/core/prompts";
+// import {ChatOpenAI, OpenAIEmbeddings} from "@langchain/openai";
+import {ChatOllama, OllamaEmbeddings} from "@langchain/ollama"
+import {PromptTemplate} from "@langchain/core/prompts";
 import {RunnablePassthrough, RunnableSequence} from "@langchain/core/runnables";
 import {HttpResponseOutputParser} from "langchain/output_parsers";
 import {PrismaVectorStore} from "@langchain/community/vectorstores/prisma";
@@ -38,15 +39,13 @@ export async function POST(req: NextRequest) {
             throw new Error("Repository not found");
         }
 
-        const llm = new ChatOpenAI({
-            model: "gpt-4o-mini",
-            temperature: 0,
-            apiKey
+        const llm = new ChatOllama({
+            model: "llama3.2:3b",
         });
 
-        const embeddings = new OpenAIEmbeddings({
-            model: "text-embedding-3-small",
-            apiKey
+        const embeddings = new OllamaEmbeddings({
+            model: "llama3.2:3b", // Default value
+            baseUrl: "http://localhost:11434", // Default value
         });
 
         const vectorStore = PrismaVectorStore.withModel<Document>(db).create(
@@ -73,7 +72,7 @@ export async function POST(req: NextRequest) {
             searchType: "similarity"
         });
 
-        const systemPrompt = SystemMessagePromptTemplate.fromTemplate(`
+        const prompt = PromptTemplate.fromTemplate(`
   You are a helpful assistant with good knowledge in coding. Use the provided context and previous conversation to answer user questions with detailed explanations.
   Read the given context before answering questions and think step by step. If you cannot answer a user question based on the provided context, inform the user. Do not use any other information for answering.
 
@@ -83,7 +82,7 @@ export async function POST(req: NextRequest) {
   {chat_history}
 
   User: {question}
-  `);
+`);
 
         const chain = RunnableSequence.from([
             RunnablePassthrough.assign({
@@ -99,7 +98,7 @@ export async function POST(req: NextRequest) {
                     return input.chat_history || [];
                 }
             }),
-            systemPrompt,
+            prompt,
             llm,
             new HttpResponseOutputParser(),
         ]);
