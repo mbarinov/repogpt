@@ -7,10 +7,13 @@ settings:
 dependencies:
   '@langchain/community':
     specifier: ^0.3.1
-    version: 0.3.1(@langchain/core@0.3.3)(ignore@6.0.2)
+    version: 0.3.1(@langchain/core@0.3.3)(@langchain/ollama@0.1.0)(ignore@6.0.2)
   '@langchain/core':
     specifier: ^0.3.3
     version: 0.3.3
+  '@langchain/ollama':
+    specifier: ^0.1.0
+    version: 0.1.0(@langchain/core@0.3.3)
   '@langchain/openai':
     specifier: ^0.3.0
     version: 0.3.0(@langchain/core@0.3.3)
@@ -49,7 +52,7 @@ dependencies:
     version: 6.0.2
   langchain:
     specifier: ^0.3.2
-    version: 0.3.2(@langchain/core@0.3.3)
+    version: 0.3.2(@langchain/core@0.3.3)(@langchain/ollama@0.1.0)
   lucide-react:
     specifier: ^0.445.0
     version: 0.445.0(react@18.3.1)
@@ -376,7 +379,7 @@ packages:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.0
 
-  /@langchain/community@0.3.1(@langchain/core@0.3.3)(ignore@6.0.2):
+  /@langchain/community@0.3.1(@langchain/core@0.3.3)(@langchain/ollama@0.1.0)(ignore@6.0.2):
     resolution: {integrity: sha512-V6n4kkv3isYoiU2ciLNhcqBT96IwxpMNt5K/KxkzOfGNJIWQcsPzTccuWZXdDOQ40kelCg+S8YKGVy8X4mkgtg==}
     engines: {node: '>=18'}
     peerDependencies:
@@ -753,7 +756,7 @@ packages:
       flat: 5.0.2
       ignore: 6.0.2
       js-yaml: 4.1.0
-      langchain: 0.3.2(@langchain/core@0.3.3)
+      langchain: 0.3.2(@langchain/core@0.3.3)(@langchain/ollama@0.1.0)
       langsmith: 0.1.59
       uuid: 10.0.0
       zod: 3.23.8
@@ -791,6 +794,17 @@ packages:
       zod-to-json-schema: 3.23.3(zod@3.23.8)
     transitivePeerDependencies:
       - openai
+    dev: false
+
+  /@langchain/ollama@0.1.0(@langchain/core@0.3.3):
+    resolution: {integrity: sha512-TI4DGenLf1ApoxFf4Bx/VPyO+a+poJKIul8AGm/FEyORtw3JPq1UDR6SdkGETrkDqzzdK9R0DvFRStd1MSTE/w==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@langchain/core': '>=0.2.21 <0.4.0'
+    dependencies:
+      '@langchain/core': 0.3.3
+      ollama: 0.5.9
+      uuid: 10.0.0
     dev: false
 
   /@langchain/openai@0.3.0(@langchain/core@0.3.3):
@@ -3614,7 +3628,7 @@ packages:
       json-buffer: 3.0.1
     dev: true
 
-  /langchain@0.3.2(@langchain/core@0.3.3):
+  /langchain@0.3.2(@langchain/core@0.3.3)(@langchain/ollama@0.1.0):
     resolution: {integrity: sha512-kd2kz1cS/PIVrLEDFlrZsAasQfPLbY1UqCZbRKa3/QcpB33/n6xPDvXSMfBuKhvNj0bjW6MXDR9HZTduXjJBgg==}
     engines: {node: '>=18'}
     peerDependencies:
@@ -3661,6 +3675,7 @@ packages:
         optional: true
     dependencies:
       '@langchain/core': 0.3.3
+      '@langchain/ollama': 0.1.0(@langchain/core@0.3.3)
       '@langchain/openai': 0.3.0(@langchain/core@0.3.3)
       '@langchain/textsplitters': 0.1.0(@langchain/core@0.3.3)
       js-tiktoken: 1.0.14
@@ -4267,6 +4282,12 @@ packages:
       define-properties: 1.2.1
       es-object-atoms: 1.0.0
     dev: true
+
+  /ollama@0.5.9:
+    resolution: {integrity: sha512-F/KZuDRC+ZsVCuMvcOYuQ6zj42/idzCkkuknGyyGVmNStMZ/sU3jQpvhnl4SyC0+zBzLiKNZJnJeuPFuieWZvQ==}
+    dependencies:
+      whatwg-fetch: 3.6.20
+    dev: false
 
   /once@1.4.0:
     resolution: {integrity: sha512-lNaJgI+2Q5URQBkccEKHTQOPaXdUxnZZElQTZY0MFUAuaEqe1E+Nyvgdz/aIyNi6Z9MzO5dv1H8n58/GELp3+w==}
@@ -5363,6 +5384,10 @@ packages:
 
   /webidl-conversions@3.0.1:
     resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}
+    dev: false
+
+  /whatwg-fetch@3.6.20:
+    resolution: {integrity: sha512-EqhiFU6daOA8kpjOWTL0olhVOF3i7OrFzSYiGsEMB8GcXS+RrzauAERX65xMeNWVqxA6HXH2m69Z9LaKKdisfg==}
     dev: false
 
   /whatwg-url@5.0.0:

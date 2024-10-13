@@ -2,7 +2,7 @@ import {
     GithubRepoLoader
 } from "@langchain/community/document_loaders/web/github";
 import {RecursiveCharacterTextSplitter} from "langchain/text_splitter";
-import {OpenAIEmbeddings} from "@langchain/openai";
+import { OllamaEmbeddings } from "@langchain/ollama";
 import {PrismaVectorStore} from "@langchain/community/vectorstores/prisma";
 import {Prisma, RepositoryStatus, PrismaClient, Document} from "@prisma/client";
 import {Document as LangchainDocument} from "langchain/document"; // Adjust the import path if necessary
@@ -167,8 +167,8 @@ export class Indexer {
      */
     private async splitDocuments(docs: LangchainDocument[]): Promise<LangchainDocument[]> {
         const splitter = new RecursiveCharacterTextSplitter({
-            chunkSize: 2000,
-            chunkOverlap: 200
+            chunkSize: 500,
+            chunkOverlap: 100
         });
 
         const chunks = await splitter.splitDocuments(docs);
@@ -185,10 +185,9 @@ export class Indexer {
     private async storeChunks(chunks: LangchainDocument[], namespace: string, repoUrl: string) {
         console.log(`[${new Date().toISOString()}] Storing ${chunks.length} chunks into the vector store`);
 
-        const openAiKey = await this.getOpenAiToken();
-        const embeddings = new OpenAIEmbeddings({
-            model: "text-embedding-3-small",
-            apiKey: openAiKey,
+        const embeddings = new OllamaEmbeddings({
+            model: "llama3.2:3b", // Default value
+            baseUrl: "http://localhost:11434", // Default value
         });
 
         const vectorStore = PrismaVectorStore.withModel<Document>(this.db).create(
