@@ -1,0 +1,20 @@
+minimumReleaseAgeExclude:
+  - "@next/env@16.4.4"
+  - "@next/eslint-plugin-next@16.4.4"
+  - "@next/swc-darwin-arm64@16.4.4"
+  - "@next/swc-darwin-x64@16.4.4"
+  - "@next/swc-linux-arm64-gnu@16.4.4"
+  - "@next/swc-linux-arm64-musl@16.4.4"
+  - "@next/swc-linux-x64-gnu@16.4.4"
+  - "@next/swc-linux-x64-musl@16.4.4"
+  - "@next/swc-win32-arm64-msvc@16.4.4"
+  - "@next/swc-win32-x64-msvc@16.4.4"
+  - "@vitest/coverage-v8@5.1.0"
+  - "@vitest/mocker@5.1.0"
+  - "@vitest/spy@5.1.0"
+  - eslint-config-next@16.4.4
+  - next@16.4.4
+  - vitest@5.1.0
+allowBuilds:
+  "@prisma/engines": true
+  prisma: true

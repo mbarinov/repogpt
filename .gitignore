@@ -37,3 +37,6 @@ next-env.d.ts
 
 .env
 /.idea
+/playwright-report/
+/test-results/
+/src/generated/

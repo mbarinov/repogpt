@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model StoreSettings {
@@ -26,7 +25,7 @@ model Document {
   vector     Unsupported("vector")?
   createdAt  DateTime               @default(now())
   updatedAt  DateTime               @updatedAt
-  repository Repository             @relation(fields: [namespace], references: [id])
+  repository Repository             @relation(fields: [namespace], references: [id], onDelete: Cascade)
 
   @@index([namespace])
 }
