@@ -356,6 +356,11 @@ test("library selection exposes accurate states and responsive screenshots", asy
   await page
     .getByRole("button", { name: "Select mbarinov/repogpt", exact: true })
     .click();
+  await page.setViewportSize({ width: 960, height: 900 });
+  await noOverflow(page);
+  await expect(
+    page.getByRole("link", { name: "Open chat", exact: true }),
+  ).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
   await noOverflow(page);
   await capture(page, "repositories-mobile");
