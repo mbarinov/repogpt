@@ -100,7 +100,9 @@ test("settings never render saved secrets and blank save preserves credentials",
   });
   expect(stored.openAiKey).toBe(fixtureKey);
   expect(stored.githubAccessToken).toBe(fixtureToken);
-  await expect(page.getByText("API keys saved.")).toBeVisible();
+  await expect(
+    page.getByText("API keys saved.", { exact: true }),
+  ).toBeVisible();
   await page.reload();
   await capture(page, "settings");
   await page.setViewportSize({ width: 390, height: 844 });

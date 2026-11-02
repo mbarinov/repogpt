@@ -227,3 +227,29 @@ it("bounds oversized import context as part of the embedding input budget", asyn
     ),
   ).toBe(true);
 });
+
+it("preserves the member identity on every oversized method and arrow-property continuation", async () => {
+  for (const member of [
+    `async processRequest(input: Request) {\n${"    inspect(input);\n".repeat(700)}  }`,
+    `processRequest = async (input: Request) => {\n${"    inspect(input);\n".repeat(700)}  };`,
+  ]) {
+    const chunks = await prepareChunks([
+      document(
+        `import { inspect } from './inspect';\nexport class RequestHandler {\n  ${member}\n}`,
+      ),
+    ]);
+    const continuations = chunks.filter((chunk) =>
+      chunk.content.includes("inspect(input)"),
+    );
+    expect(continuations.length).toBeGreaterThan(1);
+    for (const chunk of continuations) {
+      expect(chunk.context).toContain("processRequest");
+      expect(chunk.context).toContain("RequestHandler");
+      expect(chunk.context).toContain("import { inspect }");
+      expect(chunk.context.length).toBeLessThanOrEqual(800);
+      expect(
+        [chunk.context, chunk.content].filter(Boolean).join("\n\n").length,
+      ).toBeLessThanOrEqual(MAX_CHUNK_CHARACTERS);
+    }
+  }
+});

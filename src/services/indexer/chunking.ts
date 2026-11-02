@@ -115,15 +115,25 @@ function parseCodeSpans(content: string, path: string): Span[] {
       );
       let cursor = start;
       for (const member of statement.members) {
+        const oversized =
+          member.end - member.getFullStart() + memberContext.length + 2 >
+          MAX_CHUNK_CHARACTERS;
+        const name = member.name?.getText(source) ?? "constructor";
+        const spanContext = oversized
+          ? boundedContext(
+              importContext,
+              `Enclosing class:\n${header.slice(0, 250)}\nEnclosing member: ${name}\n${member.getText(source).split(/\r?\n/, 1)[0].slice(0, 250)}`,
+            )
+          : memberContext;
         if (member.getFullStart() > cursor)
           spans.push({ start: cursor, end: member.getFullStart(), context });
         // Pack adjacent small members so a large class does not create hundreds
         // of tiny embeddings, while every split still ends at a member boundary.
         const previous = spans.at(-1);
         if (
-          previous?.context === memberContext &&
+          previous?.context === spanContext &&
           previous.end === member.getFullStart() &&
-          member.end - previous.start + memberContext.length + 2 <=
+          member.end - previous.start + spanContext.length + 2 <=
             MAX_CHUNK_CHARACTERS
         )
           previous.end = member.end;
@@ -131,7 +141,7 @@ function parseCodeSpans(content: string, path: string): Span[] {
           spans.push({
             start: member.getFullStart(),
             end: member.end,
-            context: memberContext,
+            context: spanContext,
           });
         cursor = member.end;
       }
