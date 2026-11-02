@@ -24,11 +24,33 @@ export function errorResponse(error: unknown) {
 
 export function assertMutationRequest(request: Request) {
   const origin = request.headers.get("origin");
-  if (
-    (origin && origin !== new URL(request.url).origin) ||
-    request.headers.get("sec-fetch-site") === "cross-site"
-  ) {
+  const rejectOrigin = () => {
     throw new RequestError("Cross-origin requests are not allowed.", 403);
+  };
+  if (request.headers.get("sec-fetch-site") === "cross-site") rejectOrigin();
+  try {
+    const requestUrl = new URL(request.url);
+    const host = request.headers.get("host");
+    // NextURL normalizes loopback IPs to localhost. The HTTP Host header
+    // preserves the browser's actual origin; forwarded headers are not trusted.
+    if (host !== null && !/^[a-z0-9.:[\]-]+$/i.test(host)) rejectOrigin();
+    const targetUrl =
+      host === null ? requestUrl : new URL(`${requestUrl.protocol}//${host}`);
+    // This is a loopback-only, single-user app. Do not accept attacker-owned
+    // Host + Origin pairs that resolve to localhost through DNS rebinding.
+    if (!["localhost", "127.0.0.1", "[::1]"].includes(targetUrl.hostname))
+      rejectOrigin();
+    if (origin !== null) {
+      const parsedOrigin = new URL(origin);
+      if (
+        !["http:", "https:"].includes(parsedOrigin.protocol) ||
+        parsedOrigin.origin !== origin ||
+        parsedOrigin.origin !== targetUrl.origin
+      )
+        rejectOrigin();
+    }
+  } catch {
+    rejectOrigin();
   }
   if (
     request.method === "POST" &&
