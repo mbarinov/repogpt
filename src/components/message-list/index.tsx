@@ -26,8 +26,8 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
   }
 
   return (
-    <div className="overflow-y-auto mb-4 p-6 rounded-lg border border-gray-300 lg:max-w-3xl lg:mx-auto">
-      <div className="flex flex-col gap-2 ">
+    <div className="min-w-0 space-y-4">
+      <div className="flex flex-col gap-4">
         {messages.map((message) => (
           <Message
             key={message.id}
@@ -39,9 +39,9 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
         <div ref={messagesEndRef} />
       </div>
       {isLoading && (
-        <div className="text-center mt-4">
-          <span className="inline-block p-3 rounded-lg bg-gray-200 text-gray-800 shadow-md">
-            AI is thinking...
+        <div role="status" className="mt-4 px-6 text-sm text-slate-500">
+          <span className="inline-flex items-center gap-2">
+            Generating response…
           </span>
         </div>
       )}

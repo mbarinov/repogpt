@@ -53,31 +53,37 @@ export function MessageInput({
   };
 
   const examples = [
-    "What's the tech stack?",
-    "How to set up" + " the project?",
-    "How to deploy the project?",
+    "How is the project structured?",
+    "Where does authentication happen?",
+    "How do I run the project locally?",
   ];
 
   return (
     <form
       onSubmit={handleSubmit}
-      className={`flex flex-col gap-4 p-6 bg-white shadow-lg ${hasMessages ? "w-full lg:max-w-4xl mx-auto fixed bottom-0 left-0 right-0 rounded-tl-2xl rounded-tr-2xl" : "flex items-stretch justify-center w-full lg:w-2/5 rounded-2xl"}`}
+      className="flex w-full min-w-0 flex-col gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5"
     >
       <Textarea
         aria-label="Message"
-        placeholder="Ask me anything about your repo"
+        placeholder={
+          selectedRepoId
+            ? "Ask a question about this repository…"
+            : "Index a repository to start chatting"
+        }
+        disabled={!selectedRepoId}
         value={input}
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
-        className={`flex-grow mr-2 bg-white text-gray-800 border border-gray-300 rounded-lg shadow-sm ${hasMessages ? "" : "text-lg p-4"}`}
+        className="min-h-24 resize-y border-0 bg-transparent p-0 text-base text-slate-800 shadow-none focus-visible:ring-0"
       />
       {!hasMessages && examples.length > 0 && (
-        <div className="flex flex-wrap gap-2 mt-2">
+        <div className="flex flex-wrap gap-2">
           {examples.map((example, index) => (
             <button
               type="button"
               key={index}
-              className="bg-gray-200 text-gray-800 px-3 py-1 rounded-full text-sm cursor-pointer"
+              disabled={!selectedRepoId || isLoading}
+              className="rounded-md border border-slate-200 px-3 py-2 text-left text-xs text-slate-600 hover:border-teal-300 hover:bg-teal-50 disabled:opacity-50"
               onClick={() =>
                 handleInputChange({
                   target: { value: example },
@@ -89,7 +95,7 @@ export function MessageInput({
           ))}
         </div>
       )}
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
         <Select
           disabled={isLoading}
           value={selectedRepoId || ""}
@@ -100,7 +106,10 @@ export function MessageInput({
             }
           }}
         >
-          <SelectTrigger aria-label="Repository" className="w-[240px]">
+          <SelectTrigger
+            aria-label="Repository"
+            className="w-full min-w-0 sm:w-[260px]"
+          >
             <SelectValue placeholder="Select a repo" />
           </SelectTrigger>
           <SelectContent>
@@ -116,7 +125,7 @@ export function MessageInput({
         </Select>
         <div className="flex flex-row gap-2">
           {isLoading && (
-            <Button type="button" onClick={onStop}>
+            <Button type="button" variant="outline" onClick={onStop}>
               Stop
             </Button>
           )}
@@ -126,7 +135,8 @@ export function MessageInput({
               onClick={onClear}
               size="sm"
               disabled={isLoading}
-              className={`flex gap-1 rounded-full text-white shadow-md ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+              variant="ghost"
+              className="text-slate-600"
             >
               <span className="font-semibold">Clear</span>
             </Button>
@@ -136,7 +146,7 @@ export function MessageInput({
             type="submit"
             size="sm"
             disabled={isLoading || !selectedRepoId || !input.trim()}
-            className={`flex gap-1 bg-blue-600 rounded-full hover:bg-blue-700 text-white shadow-md ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+            className="gap-2 bg-teal-900 text-white hover:bg-teal-800"
           >
             <Send className="h-4 w-4" />
             <span className="font-semibold">Send</span>

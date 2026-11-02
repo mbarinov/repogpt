@@ -3,7 +3,10 @@ import db from "@/lib/prisma";
 import { redirect } from "next/navigation";
 
 interface ChatPageProps {
-  searchParams: Promise<{ repoId?: string | string[] }>;
+  searchParams: Promise<{
+    repoId?: string | string[];
+    prompt?: string | string[];
+  }>;
 }
 
 export const dynamic = "force-dynamic";
@@ -26,9 +29,14 @@ export default async function ChatPage({ searchParams }: ChatPageProps) {
   return (
     <div className="flex flex-col h-full">
       <Chat
-        key={typeof params.repoId === "string" ? params.repoId : "default"}
+        key={`${typeof params.repoId === "string" ? params.repoId : "default"}:${typeof params.prompt === "string" ? params.prompt : ""}`}
         defaultRepoId={
           typeof params.repoId === "string" ? params.repoId : undefined
+        }
+        defaultPrompt={
+          typeof params.prompt === "string"
+            ? params.prompt.slice(0, 2000)
+            : undefined
         }
         repositories={list}
       />

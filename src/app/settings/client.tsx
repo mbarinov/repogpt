@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { EyeIcon, EyeOffIcon } from "lucide-react";
+import { EyeIcon, EyeOffIcon, CheckCircle2 } from "lucide-react";
 
 interface ConfigurationFormProps {
   hasOpenAiKey?: boolean;
@@ -21,6 +21,10 @@ export function ConfigurationForm(props: ConfigurationFormProps) {
   const { toast } = useToast();
 
   const [saving, setSaving] = useState(false);
+  const [feedback, setFeedback] = useState<{
+    error: boolean;
+    message: string;
+  } | null>(null);
   const [configured, setConfigured] = useState({
     openai: props.hasOpenAiKey,
     github: props.hasGithubAccessToken,
@@ -29,6 +33,7 @@ export function ConfigurationForm(props: ConfigurationFormProps) {
     event.preventDefault();
     if (saving) return;
     setSaving(true);
+    setFeedback(null);
     try {
       const response = await fetch("/api/settings", {
         method: "POST",
@@ -41,8 +46,16 @@ export function ConfigurationForm(props: ConfigurationFormProps) {
       setGithubAccessToken("");
       setShowOpenAIKey(false);
       setShowGithubKey(false);
+      setFeedback({
+        error: false,
+        message: "Connections updated. You’re ready to import repositories.",
+      });
       toast({ title: "Saved", description: "API keys saved." });
     } catch {
+      setFeedback({
+        error: true,
+        message: "Could not save API keys. Please try again.",
+      });
       toast({
         title: "Error",
         description: "Could not save API keys. Please try again.",
@@ -54,9 +67,19 @@ export function ConfigurationForm(props: ConfigurationFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="openai-key">OpenAI API Key</Label>
+    <form onSubmit={handleSubmit} className="space-y-8">
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <Label htmlFor="openai-key" className="text-base font-semibold">
+            OpenAI API Key
+          </Label>
+          {configured.openai && (
+            <span className="inline-flex items-center gap-1.5 text-xs text-teal-800">
+              <CheckCircle2 size={14} />
+              Configured
+            </span>
+          )}
+        </div>
         <div className="relative">
           <Input
             id="openai-key"
@@ -68,7 +91,7 @@ export function ConfigurationForm(props: ConfigurationFormProps) {
             }
             value={openAiKey}
             onChange={(e) => setOpenAiKey(e.target.value)}
-            className="bg-beige-50 border-beige-300 pr-10"
+            className="h-12 border-slate-200 bg-white pr-12"
             required={!configured.openai}
             autoComplete="off"
             disabled={saving}
@@ -77,7 +100,8 @@ export function ConfigurationForm(props: ConfigurationFormProps) {
             type="button"
             variant="ghost"
             size="icon"
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-beige-700 hover:text-beige-900 hover:bg-beige-200"
+            disabled={saving}
+            className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-500 hover:bg-slate-100 hover:text-teal-900"
             aria-label={showOpenAIKey ? "Hide OpenAI key" : "Show OpenAI key"}
             onClick={() => setShowOpenAIKey(!showOpenAIKey)}
           >
@@ -88,18 +112,17 @@ export function ConfigurationForm(props: ConfigurationFormProps) {
             )}
           </Button>
         </div>
-        <p className="text-sm text-beige-700">
-          OpenAI key is needed for indexing and requests. Your OpenAI API key is
-          stored in this server’s database. Run RepoGPT locally; it has no
-          authentication.
+        <p className="text-sm leading-6 text-slate-500">
+          Used to index code and generate answers. API usage is billed to your
+          OpenAI account.
         </p>
-        <p className="text-sm text-beige-700">
+        <p className="text-sm leading-6 text-slate-500">
           To get your OpenAI API key, visit{" "}
           <a
             href="https://platform.openai.com/account/api-keys"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-600 hover:underline"
+            className="text-teal-800 underline underline-offset-2 hover:text-teal-950"
           >
             OpenAI API Keys
           </a>
@@ -107,8 +130,18 @@ export function ConfigurationForm(props: ConfigurationFormProps) {
         </p>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="github-key">GitHub API Key</Label>
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <Label htmlFor="github-key" className="text-base font-semibold">
+            GitHub API Key
+          </Label>
+          {configured.github && (
+            <span className="inline-flex items-center gap-1.5 text-xs text-teal-800">
+              <CheckCircle2 size={14} />
+              Configured
+            </span>
+          )}
+        </div>
         <div className="relative">
           <Input
             id="github-key"
@@ -120,7 +153,7 @@ export function ConfigurationForm(props: ConfigurationFormProps) {
             }
             value={githubAccessToken}
             onChange={(e) => setGithubAccessToken(e.target.value)}
-            className="bg-beige-50 border-beige-300 pr-10"
+            className="h-12 border-slate-200 bg-white pr-12"
             required={!configured.github}
             autoComplete="off"
             disabled={saving}
@@ -129,7 +162,8 @@ export function ConfigurationForm(props: ConfigurationFormProps) {
             type="button"
             variant="ghost"
             size="icon"
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-beige-700 hover:text-beige-900 hover:bg-beige-200"
+            disabled={saving}
+            className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-500 hover:bg-slate-100 hover:text-teal-900"
             aria-label={
               showGithubKey ? "Hide GitHub token" : "Show GitHub token"
             }
@@ -142,18 +176,17 @@ export function ConfigurationForm(props: ConfigurationFormProps) {
             )}
           </Button>
         </div>
-        <p className="text-sm text-beige-700">
-          GitHub Access Token is needed for reading repository contents. Your
-          GitHub API key is stored in this server’s database. Run RepoGPT
-          locally; it has no authentication.
+        <p className="text-sm leading-6 text-slate-500">
+          Used to read repository contents. For private repositories, grant read
+          access to their contents.
         </p>
-        <p className="text-sm text-beige-700">
+        <p className="text-sm leading-6 text-slate-500">
           To get your GitHub Access Token, visit{" "}
           <a
             href="https://github.com/settings/tokens"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-600 hover:underline"
+            className="text-teal-800 underline underline-offset-2 hover:text-teal-950"
           >
             GitHub Tokens
           </a>
@@ -161,19 +194,28 @@ export function ConfigurationForm(props: ConfigurationFormProps) {
         </p>
       </div>
 
-      <div className="flex flex-col gap-4">
+      {feedback && (
+        <p
+          role={feedback.error ? "alert" : "status"}
+          className={`rounded-lg border p-3 text-sm ${feedback.error ? "border-red-200 bg-red-50 text-red-800" : "border-teal-200 bg-teal-50 text-teal-900"}`}
+        >
+          {feedback.message}
+        </p>
+      )}
+      <div className="flex flex-wrap gap-3 border-t border-slate-200 pt-6">
         <Button
           type="submit"
           disabled={saving}
-          className="w-full bg-blue-600 text-white hover:bg-blue-700"
+          className="min-w-28 bg-teal-900 text-white hover:bg-teal-800"
         >
           {saving ? "Saving…" : "Save"}
         </Button>
         <Button
           asChild
-          className="w-full bg-gray-400 text-white hover:bg-gray-500"
+          variant="outline"
+          className="border-slate-200 text-teal-900"
         >
-          <Link href="/repositories">Import Repos</Link>
+          <Link href="/repositories">Repositories</Link>
         </Button>
       </div>
     </form>

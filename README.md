@@ -9,15 +9,23 @@ Built with Next.js, React, Vercel AI SDK, LangChain, and Prisma. Designed for **
 
 ## Screenshots
 
-Captured from the running local app with synthetic test fixtures (no real credentials or live OpenAI calls).
+Actual browser captures of the running app, using synthetic test repositories and mocked chat responses. No real credentials or live OpenAI calls are used. [Capture provenance and checks](docs/ui-verification.md).
+
+### Repository library
+
+Select a repository to see its indexing status, open a chat, or manage its local index.
+
+![Repository library](docs/images/repositories.png)
 
 ### Repository chat
 
 ![Repository chat](docs/images/chat.png)
 
-### Repository management
+### Settings
 
-![Repository management](docs/images/repositories.png)
+![API connection settings](docs/images/settings.png)
+
+Mobile captures: [repository library](docs/images/repositories-mobile.png) · [chat](docs/images/chat-mobile.png) · [settings](docs/images/settings-mobile.png).
 
 ## Quick start
 
@@ -39,8 +47,8 @@ Open [http://127.0.0.1:3000](http://127.0.0.1:3000). The app and the Compose dat
 
 1. In **Settings**, save your OpenAI key and GitHub token.
 2. For a fine-grained GitHub token, select the repositories you want to import and grant **Contents: Read-only**. Organization repositories may require owner approval. Never grant write access just for RepoGPT.
-3. In **Repositories**, enter a GitHub repository URL and branch, then import. Keep the request open until indexing completes; a successful import is not reported before indexing finishes.
-4. Select the imported repository in **Chat** and ask a question.
+3. In **Repositories**, choose **Import repository**, enter a GitHub URL and optional branch, then select **Import**. Keep the dialog open until indexing completes; a successful import is not reported before indexing finishes.
+4. Select a ready repository and choose **Open chat**. Suggested questions fill the message box; they never send a request until you submit.
 
 Settings inputs intentionally stay blank after saving. Leaving an input blank preserves its existing credential; stored credentials are never sent back to the browser.
 
