@@ -64,4 +64,8 @@ Visible focus indicators, labeled fields, native modal focus containment, semant
 - Optional future refinement: a project-owned font could narrow the small typography difference from the generated reference. No dependency or external font loading was added for this cosmetic detail.
 - Manual assistive-technology and browser matrix testing remain outside this Chromium-backed review.
 
+## Source-citation update
+
+The repository layout remains unchanged. Actual desktop/mobile chat captures from successful CI run [41518360622](https://github.com/mbarinov/repogpt/actions/runs/41518360622), head `156b16f2d615780e664b6be1e299a5ec0e5c2a9b`, were opened and inspected after adding server-issued source links. Citation links and their compact retrieved-source list remain readable and wrap without overflow; clear/switch isolation and unknown-link suppression are browser-tested. The eight non-chat screenshots are byte-identical to the earlier reviewed UI. Updated image hashes are in `docs/ui-verification.md`.
+
 final result: passed

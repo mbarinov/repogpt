@@ -42,8 +42,13 @@ export function Message({
               );
               // Model-written locations and unknown citation IDs are never clickable evidence.
               return source ? (
-                <a href={source.url} target="_blank" rel="noreferrer">
-                  {children}
+                <a
+                  href={source.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  title={`${source.path}:${source.startLine}–${source.endLine}`}
+                >
+                  {source.id}
                 </a>
               ) : (
                 <span>{children}</span>

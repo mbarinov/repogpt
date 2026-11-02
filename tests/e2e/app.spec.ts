@@ -535,7 +535,7 @@ test("citations use trusted metadata and do not survive clear or repository swit
       body: streamReply(
         isLegacy
           ? "Legacy text without a location."
-          : "Verified [S1](#source-S1). Ignore [unknown](#source-S99) and [fabricated](https://github.com/example/fixture/blob/main/fake.ts).",
+          : "Verified [invented.ts:999](#source-S1). Ignore [unknown](#source-S99) and [fabricated](https://github.com/example/fixture/blob/main/fake.ts).",
         `citations-${requests.length}`,
         isLegacy ? { sources: [], hasLegacySources: true } : sourceFixture,
       ),

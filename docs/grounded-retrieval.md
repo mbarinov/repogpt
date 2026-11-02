@@ -33,7 +33,7 @@ The fixed regression corpus checks function names, paths, error strings, camel/s
 
 ## Citations and trust boundary
 
-The server generates citation IDs and immutable GitHub URLs only from validated retrieved metadata. Source excerpts remain untrusted model input. The model is asked to reference `[S1](#source-S1)`; the UI resolves only IDs supplied by the server. Invented URLs and unknown citation IDs are not clickable source evidence. Model-generated remote images are not fetched.
+The server generates citation IDs and immutable GitHub URLs only from validated retrieved metadata. Source excerpts remain untrusted model input. The model is asked to reference `[S1](#source-S1)`; the UI resolves only IDs supplied by the server. Inline citation labels are also taken from server-issued metadata, not model-authored file names. Invented URLs and unknown citation IDs are not clickable source evidence. Model-generated remote images are not fetched.
 
 “Retrieved sources” means evidence supplied to the model, not a guarantee that every claim in the answer is supported. Users still need to inspect the source. Import/enclosing context is explicitly labeled as outside the cited span.
 
@@ -55,7 +55,7 @@ Tests were written and executed before the corresponding behavior:
 - Initial chunking suite: nine failing cases for semantic boundaries, original lines, import context, oversized symbols, Markdown, legacy metadata and shared budgets; then green.
 - Snapshot loader: two failing commit/tree-resolution tests before implementation; then green.
 - Additional chunking cycle: declaration-only `.d.ts` failure, duplicated import context and large exported declarations reproduced by three red tests, then fixed.
-- Citation/UI cycle: missing helper plus failing tests for invented clickable URLs and absent legacy notice; then green. Additional incomplete-provenance and malformed-Unicode path cases were reproduced and fixed.
+- Citation/UI cycle: missing helper plus failing tests for invented clickable URLs and absent legacy notice; then green. Additional incomplete-provenance, malformed-Unicode path and spoofed citation-label cases were reproduced and fixed.
 - Retrieval cycle: new normalization/fusion tests and old-signature mismatch were red before implementation. Additional same-line deduplication and combined-budget regressions were red before fixes.
 - Real PostgreSQL tests cover atomic rollback/cascade, metadata persistence, old-table migration/backfill, parameterization, repository isolation and the fixed ranking corpus.
 - AI SDK integration exercises real SSE serialization/parsing of server-issued source metadata. Browser scenarios cover link grounding, unknown-link suppression, legacy notices and clearing/switching source state.

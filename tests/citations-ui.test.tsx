@@ -42,3 +42,17 @@ it("explains reindexing for legacy excerpts without fake sources", () => {
   expect(screen.getByText(/Refresh the repository index/)).toBeTruthy();
   expect(screen.queryByRole("link")).toBeNull();
 });
+it("does not use a model-authored location as the label of a trusted citation", () => {
+  render(
+    <Message
+      id="1"
+      role="assistant"
+      content="See [src/fake.ts:999](#source-S1)."
+      sources={[source]}
+    />,
+  );
+  expect(screen.queryByRole("link", { name: "src/fake.ts:999" })).toBeNull();
+  expect(screen.getByRole("link", { name: "S1" }).getAttribute("href")).toBe(
+    source.url,
+  );
+});
