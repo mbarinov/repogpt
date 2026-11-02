@@ -1,254 +1,121 @@
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
+import { OpenAIEmbeddings } from "@langchain/openai";
+import type { Document } from "@langchain/core/documents";
+import { Prisma, type PrismaClient } from "@prisma/client";
+import prisma from "@/lib/prisma";
+import { RequestError } from "@/lib/server/errors";
+import { loadGithubDocuments } from "./github";
 import {
-    GithubRepoLoader
-} from "@langchain/community/document_loaders/web/github";
-import {RecursiveCharacterTextSplitter} from "langchain/text_splitter";
-import {OpenAIEmbeddings} from "@langchain/openai";
-import {PrismaVectorStore} from "@langchain/community/vectorstores/prisma";
-import {Prisma, RepositoryStatus, PrismaClient, Document} from "@prisma/client";
-import {Document as LangchainDocument} from "langchain/document"; // Adjust the import path if necessary
-import prisma from '@/lib/prisma';
+  EMBEDDING_MODEL,
+  EMBEDDING_DIMENSIONS,
+  replaceDocuments,
+  vectorLiteral,
+} from "./vector-store";
 
-/**
- * List of paths to ignore when loading documents from GitHub repositories.
- */
-const IGNORED_PATHS = [
-    "**/node_modules/**",
-    "**/dist/**",
-    "**/build/**",
-    "**/coverage/**",
-    "**/.github/**",
-    "**/.git/**",
-    "**/.vscode/**",
-    "**/.idea/**",
-    "**/.gitignore",
-    "**/.npmignore",
-    "**/.eslintrc.js",
-    "**/tsconfig.json",
-    "**/package.json",
-    "**/package-lock.json",
-    "**/yarn.lock",
-    "**/pnpm-lock.yaml"
-];
-
-/**
- * Indexer class responsible for loading, processing, and storing documents from a GitHub repository.
- */
-export class Indexer {
-    private readonly db: PrismaClient;
-
-    /**
-     * Constructs an Indexer instance.
-     * @param db - PrismaClient instance for database interactions.
-     */
-    constructor(db: PrismaClient = prisma) {
-        this.db = db;
-    }
-
-    /**
-     * Executes the indexing process for a given repository ID.
-     * @param repoId - The ID of the repository to index.
-     */
-    public async run(repoId: string, branch: string = "main") {
-        console.log(`[${new Date().toISOString()}] Starting indexing for repository ID: ${repoId}`);
-
-        try {
-            const repository = await this.getRepository(repoId);
-            const docs = await this.loadDocuments(repository.url, branch);
-            const chunks = await this.splitDocuments(docs);
-
-            await this.storeChunks(chunks, repository.id, repository.url);
-
-            console.log(`[${new Date().toISOString()}] Indexing completed successfully for repository ID: ${repoId}`);
-        } catch (error) {
-            this.db.repository.update({
-                where: {
-                    id: repoId,
-                },
-                data: {
-                    error: (error as Error).message,
-                    status: RepositoryStatus.ERROR
-                }
-            }).then(() => {
-                console.error(`[${new Date().toISOString()}] Error during indexing for repository ID ${repoId}:`, error);
-            })
-        }
-    }
-
-    /**
-     * Retrieves repository details from the database.
-     * @param repoId - The ID of the repository.
-     * @returns The repository record.
-     * @throws Error if the repository is not found.
-     */
-    private async getRepository(repoId: string) {
-        const repository = await this.db.repository.findUnique({
-            where: {id: repoId}
-        });
-
-        if (!repository) {
-            throw new Error(`Repository with ID ${repoId} not found`);
-        }
-
-        return repository;
-    }
-
-    /**
-     * Retrieves the GitHub access token from the database.
-     * @returns The GitHub access token.
-     * @throws Error if the access token is not found.
-     */
-    private async getGithubAccessToken(): Promise<string> {
-        const settings = await this.db.storeSettings.findFirst({
-            orderBy: {createdAt: 'desc'} // Ensures the latest settings are fetched
-        });
-
-        const accessToken = settings?.githubAccessToken;
-
-        if (!accessToken) {
-            throw new Error("GitHub access token is required");
-        }
-
-        return accessToken;
-    }
-
-    /**
-     * Retrieves the OpenAI access token from the database.
-     * @returns The OpenAI access token.
-     * @throws Error if the access token is not found.
-     */
-    private async getOpenAiToken(): Promise<string> {
-        const settings = await this.db.storeSettings.findFirst({
-            orderBy: {createdAt: 'desc'} // Ensures the latest settings are fetched
-        });
-
-        const openAiKey = settings?.openAiKey;
-
-        if (!openAiKey) {
-            throw new Error("OpenAI access token is required");
-        }
-
-        return openAiKey;
-    }
-
-    /**
-     * Loads documents from a GitHub repository.
-     * @param repoUrl - The URL of the GitHub repository.
-     * @param branch - The branch to load documents from (default is "main").
-     * @returns An array of LangChain documents.
-     */
-    private async loadDocuments(repoUrl: string, branch: string = "main"): Promise<LangchainDocument[]> {
-        const accessToken = await this.getGithubAccessToken();
-
-        const loader = new GithubRepoLoader(
-            repoUrl,
-            {
-                branch,
-                recursive: true,
-                accessToken,
-                unknown: "warn",
-                maxConcurrency: 5,
-                ignorePaths: IGNORED_PATHS
-            }
-        );
-
-        const docs: LangchainDocument[] = [];
-        for await (const doc of loader.loadAsStream()) {
-            docs.push(doc);
-        }
-
-        console.log(`[${new Date().toISOString()}] Loaded ${docs.length} documents from ${repoUrl}`);
-        return docs;
-    }
-
-    /**
-     * Splits documents into manageable chunks.
-     * @param docs - The array of documents to split.
-     * @returns An array of document chunks.
-     */
-    private async splitDocuments(docs: LangchainDocument[]): Promise<LangchainDocument[]> {
-        const splitter = new RecursiveCharacterTextSplitter({
-            chunkSize: 2000,
-            chunkOverlap: 200
-        });
-
-        const chunks = await splitter.splitDocuments(docs);
-        console.log(`[${new Date().toISOString()}] Split into ${chunks.length} chunks`);
-        return chunks;
-    }
-
-    /**
-     * Stores document chunks into the vector store.
-     * @param chunks - The array of document chunks to store.
-     * @param namespace - The namespace under which to store the documents (should be Repository.id).
-     * @param repoUrl - The URL of the repository (used to update repository status).
-     */
-    private async storeChunks(chunks: LangchainDocument[], namespace: string, repoUrl: string) {
-        console.log(`[${new Date().toISOString()}] Storing ${chunks.length} chunks into the vector store`);
-
-        const openAiKey = await this.getOpenAiToken();
-        const embeddings = new OpenAIEmbeddings({
-            model: "text-embedding-3-small",
-            apiKey: openAiKey,
-        });
-
-        const vectorStore = PrismaVectorStore.withModel<Document>(this.db).create(
-            embeddings,
-            {
-                prisma: Prisma,
-                tableName: "Document",
-                vectorColumnName: "vector",
-                columns: {
-                    id: PrismaVectorStore.IdColumn,
-                    content: PrismaVectorStore.ContentColumn,
-                }
-            }
-        );
-
-        try {
-            // Delete existing documents with the same namespace (Repository.id)
-            await this.db.document.deleteMany({
-                where: {namespace}
-            });
-            console.log(`[${new Date().toISOString()}] Deleted existing documents in namespace: ${namespace}`);
-
-            // Create new document records with the correct namespace (Repository.id)
-            const createPromises = chunks.map(chunk =>
-                this.db.document.create({
-                    data: {
-                        content: sanitizeString(chunk.pageContent),
-                        namespace
-                    }
-                })
-            );
-
-            const createdDocs = await this.db.$transaction(createPromises);
-            console.log(`[${new Date().toISOString()}] Created ${createdDocs.length} document records`);
-
-            // Add the created documents to the vector store
-            await vectorStore.addModels(createdDocs);
-            console.log(`[${new Date().toISOString()}] Added models to the vector store`);
-
-            // Update the repository status using repoUrl
-            await this.db.repository.update({
-                where: {url: repoUrl},
-                data: {status: RepositoryStatus.IMPORTED, error: null}
-            });
-            console.log(`[${new Date().toISOString()}] Updated repository status to IMPORTED for URL: ${repoUrl}`);
-        } catch (error) {
-            console.error(`[${new Date().toISOString()}] Error storing chunks for namespace ${namespace}:`, error);
-
-            // Update the repository status to NOT_STARTED in case of error
-            await this.db.repository.update({
-                where: {url: repoUrl},
-                data: {status: RepositoryStatus.NOT_STARTED}
-            });
-            console.log(`[${new Date().toISOString()}] Updated repository status to NOT_STARTED for URL: ${repoUrl}`);
-
-            throw error; // Re-throw to allow upstream handling if necessary
-        }
-    }
+export const EMBEDDING_BATCH_SIZE = 32;
+const MAX_CHUNKS = 10_000;
+export function sanitizeContent(content: string): string {
+  return content
+    .replace(/\0/g, "")
+    .replace(
+      /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g,
+      "",
+    )
+    .trim();
+}
+export async function prepareChunks(documents: Document[]): Promise<string[]> {
+  const splitter = new RecursiveCharacterTextSplitter({
+    chunkSize: 2000,
+    chunkOverlap: 200,
+  });
+  const chunks = (await splitter.splitDocuments(documents))
+    .map((chunk) => sanitizeContent(chunk.pageContent))
+    .filter(Boolean);
+  if (!chunks.length)
+    throw new RequestError(
+      "No indexable text was found in this repository.",
+      422,
+    );
+  if (chunks.length > MAX_CHUNKS)
+    throw new RequestError(
+      "This repository exceeds the 10,000-chunk indexing limit.",
+      422,
+    );
+  return chunks;
 }
 
-function sanitizeString(input: string): string {
-    return input.replace(/\0/g, ''); // Removes all null bytes
+export async function embedChunks(
+  chunks: string[],
+  embed: (texts: string[]) => Promise<number[][]>,
+): Promise<number[][]> {
+  const vectors: number[][] = [];
+  for (let offset = 0; offset < chunks.length; offset += EMBEDDING_BATCH_SIZE) {
+    const batch = chunks.slice(offset, offset + EMBEDDING_BATCH_SIZE);
+    if (batch.some((text) => !text.trim() || text.length > 2000))
+      throw new RequestError("Invalid embedding input.", 422);
+    const result = await embed(batch);
+    if (result.length !== batch.length)
+      throw new Error("Incomplete embedding response.");
+    result.forEach(vectorLiteral);
+    vectors.push(...result);
+  }
+  return vectors;
+}
+
+export class Indexer {
+  constructor(private readonly db: PrismaClient = prisma) {}
+  async run(repositoryId: string, branch?: string) {
+    try {
+      const repository = await this.db.repository.findUnique({
+        where: { id: repositoryId },
+      });
+      if (!repository) throw new RequestError("Repository not found.", 404);
+      const settings = await this.db.storeSettings.findUnique({
+        where: { id: 1 },
+      });
+      if (!settings?.githubAccessToken || !settings?.openAiKey)
+        throw new RequestError(
+          "Configure your GitHub and OpenAI keys first.",
+          409,
+        );
+      const docs = await loadGithubDocuments(
+        repository.url,
+        settings.githubAccessToken,
+        branch,
+      );
+      const chunks = await prepareChunks(docs);
+      const embeddings = new OpenAIEmbeddings({
+        model: EMBEDDING_MODEL,
+        dimensions: EMBEDDING_DIMENSIONS,
+        apiKey: settings.openAiKey,
+        maxRetries: 2,
+        timeout: 30_000,
+      });
+      const vectors = await embedChunks(chunks, (texts) =>
+        embeddings.embedDocuments(texts),
+      );
+      await replaceDocuments(repositoryId, chunks, vectors, this.db);
+    } catch (error) {
+      const safeError =
+        error instanceof RequestError
+          ? error
+          : new RequestError(
+              "Indexing failed. Check your OpenAI key, quota and model access, then retry. Any previous index was preserved.",
+              502,
+            );
+      const [previousIndex] = await this.db.$queryRaw<{ exists: boolean }[]>(
+        Prisma.sql`SELECT EXISTS (SELECT 1 FROM "Document" WHERE "namespace" = ${repositoryId} AND "vector" IS NOT NULL) AS "exists"`,
+      );
+      // Keep the previous successful index queryable after a failed refresh.
+      // updateMany is intentionally safe when the user deleted the repository mid-import.
+      await this.db.repository.updateMany({
+        where: { id: repositoryId },
+        data: {
+          status: previousIndex?.exists ? "IMPORTED" : "ERROR",
+          error: safeError.message,
+        },
+      });
+      throw safeError;
+    }
+  }
 }

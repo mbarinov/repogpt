@@ -1,0 +1,21 @@
+services:
+  db:
+    # pgvector 0.8.7, PostgreSQL 17; multi-platform manifest pinned for reproducibility.
+    image: pgvector/pgvector:0.8.7-pg17-bookworm@sha256:7d0a41464797aeb9862dfdc0bbf1526b82cfd324cdd8036df19e3545f4a9ccb8
+    environment:
+      POSTGRES_USER: repogpt
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-repogpt-local-only}
+      POSTGRES_DB: repogpt
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - repogpt-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U repogpt -d repogpt"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+volumes:
+  repogpt-data:

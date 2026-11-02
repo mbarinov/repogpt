@@ -1,164 +1,80 @@
-# RepoGPT: AI-Powered GitHub Assistant 🚀
+# RepoGPT
 
+[![CI](https://github.com/mbarinov/repogpt/actions/workflows/ci.yml/badge.svg)](https://github.com/mbarinov/repogpt/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/mbarinov/repogpt)](LICENSE)
-[![Version](https://img.shields.io/github/package-json/v/mbarinov/repogpt)](package.json)
-[![Contributors](https://img.shields.io/github/contributors/mbarinov/repogpt)](https://github.com/mbarinov/repogpt/graphs/contributors)
 
-**RepoGPT** is an open-source, AI-powered assistant that revolutionizes how developers interact with their GitHub repositories. By leveraging natural language processing, it simplifies codebase exploration and management, providing intelligent insights to make development more efficient and intuitive.
+Chat with a GitHub codebase. RepoGPT imports source files and useful configuration, splits them into chunks, and stores OpenAI embeddings in PostgreSQL with pgvector. Questions retrieve relevant chunks and stream an answer grounded in that repository.
 
-## Table of Contents
+Built with Next.js, React, Vercel AI SDK, LangChain, and Prisma. Designed for **one person running it locally**, not as a public hosted service.
 
-- [Features](#features)
-- [Demo](#demo)
-- [Getting Started](#getting-started)
-- [Prerequisites](#prerequisites)
-- [Installation Guide](#installation-guide)
-- [Usage](#usage)
-- [Roadmap](#roadmap)
-- [Contributing](#contributing)
-- [License](#license)
+## Screenshots
 
-## Features ✨
+Captured from the running local app with synthetic test fixtures (no real credentials or live OpenAI calls).
 
-- **AI-Driven Repo Interaction** – Chat with your repositories using natural language to get insights, generate documentation, or receive code suggestions.
-- **Streamlined Repo Management** – Import, list, and delete repositories effortlessly within the application.
-- **PostgreSQL + pgvector Integration** – Built for efficient AI-powered data processing and storage.
-- **Simple Setup** – Get up and running in minutes with minimal configuration.
+### Repository chat
 
-## Demo 🎥
+![Repository chat](docs/images/chat.png)
 
-Here's a look at RepoGPT in action:
+### Repository management
 
-### Chat with your GitHub repository:
+![Repository management](docs/images/repositories.png)
 
-![Chat with Repo](https://storage.googleapis.com/aithelete/chat.png)
+## Quick start
 
-### Manage repositories:
+Requirements: **Node.js 24**, **pnpm 12.16.1**, Docker with Compose, and an OpenAI API key. Imports and chat make paid OpenAI requests; your provider's charges apply.
 
-![Manage Repos](https://storage.googleapis.com/aithelete/repos.png)
-
-## Getting Started 🚀
-
-Follow these instructions to get a copy of RepoGPT up and running on your local machine for development and testing purposes.
-
-## Prerequisites 🛠️
-
-Before starting, ensure you have the following installed:
-
-- [Node.js](https://nodejs.org/) (v18 or higher)
-- [pnpm](https://pnpm.io/) (preferred package manager)
-- [Docker](https://www.docker.com/) (for database setup)
-- [PostgreSQL](https://www.postgresql.org/) with the [pgvector extension](https://github.com/pgvector/pgvector)
-- [OpenAI API Key](https://platform.openai.com/) (for AI functionalities)
-
-## Installation Guide 📦
-
-### 1. Clone the Repository
-
-```bash
+```sh
 git clone https://github.com/mbarinov/repogpt.git
 cd repogpt
+npm install --global pnpm@12.16.1
+cp .env.example .env
+pnpm install --frozen-lockfile
+docker compose up -d --wait
+pnpm db:generate
+pnpm db:migrate
+pnpm dev
 ```
 
-### 2. Install Dependencies
+Open [http://127.0.0.1:3000](http://127.0.0.1:3000). The app and the Compose database bind to loopback by default.
 
-```bash
-pnpm install
-```
+1. In **Settings**, save your OpenAI key and GitHub token.
+2. For a fine-grained GitHub token, select the repositories you want to import and grant **Contents: Read-only**. Organization repositories may require owner approval. Never grant write access just for RepoGPT.
+3. In **Repositories**, enter a GitHub repository URL and branch, then import. Keep the request open until indexing completes; a successful import is not reported before indexing finishes.
+4. Select the imported repository in **Chat** and ask a question.
 
-### 3. Set Up PostgreSQL with pgvector
+Settings inputs intentionally stay blank after saving. Leaving an input blank preserves its existing credential; stored credentials are never sent back to the browser.
 
-To leverage AI capabilities, RepoGPT uses PostgreSQL with the pgvector extension. Use Docker to set up the database:
+For a production-mode **local** run:
 
-```bash
-docker run -d \
-  --name pgvector \
-  -e POSTGRES_USER=postgres \
-  -e POSTGRES_PASSWORD=yourpassword \
-  -e POSTGRES_DB=repogpt \
-  -p 5432:5432 \
-  ankane/pgvector
-```
-
-### 4. Configure Environment Variables
-
-Create a `.env` file in the project root directory and set the following variables:
-
-```env
-DATABASE_URL=postgresql://postgres:yourpassword@localhost:5432/repogpt
-```
-
-### 5. Initialize the Database Schema
-
-Use Prisma to push the necessary database schema:
-
-```bash
-npx prisma migrate dev
-```
-
-### 6. Build and Start the Application
-
-To build and start the app, run:
-
-```bash
+```sh
 pnpm build
 pnpm start
 ```
 
-### 7. Access the Application
+### Database and upgrades
 
-Once running, the app will be available at [http://localhost:3000](http://localhost:3000). You can now start managing and interacting with your repositories via RepoGPT.
+Compose pins an official `pgvector/pgvector` image with PostgreSQL 17 and pgvector 0.8.7, and stores data in the `repogpt-data` volume. `docker compose down` preserves that volume; **`docker compose down -v` deletes it**.
 
-## Usage 📝
+If using an existing PostgreSQL server, install pgvector and set `DATABASE_URL` in `.env`. The migration role must be able to create the `vector` extension (or have an administrator create it first).
 
-### Import Your First Repository
+Before upgrading an existing installation, back up your database. Install with the committed lockfile, regenerate the Prisma client, and apply committed migrations with `pnpm db:migrate`. Do not replace this with `prisma db push`: the migration history includes the vector extension and relationship changes. Do not point the Compose volume at data from a different PostgreSQL major version; use PostgreSQL's supported upgrade or dump/restore procedure.
 
-Use the following command to import a repository:
+## Privacy and limitations
 
-* Set the OpenAI API key and Github Access Token. http://localhost:3000/settings
-* Navigate to the **Repositories** section. http://localhost:3000/repositories
-* Fill in the repository URL, repository branch name and click on the **Import** button.
-* The repository will be imported and available for interaction in a few minutes.
+- **No authentication or tenant isolation.** Anyone who can reach the app can change settings, import/delete repositories, and use your API key. Do not expose it through a public IP, port-forward, shared reverse proxy, or public preview URL.
+- Credentials are stored **unencrypted in the local database**. Protect the database, its volume and backups; use least-privilege tokens. Loopback binding is not a substitute for authentication on a shared or untrusted machine.
+- Repository text is sent to OpenAI for embeddings; retrieved excerpts and conversation messages are sent for answers. Only import code you are authorized to share with that provider.
+- Repository content is untrusted data, not model instructions. Separating it from the system prompt reduces instruction confusion, but model output can still be wrong or manipulated. Review suggested code before using it.
+- Imports run within an HTTP request, not a durable job queue. Imports are limited to 2,000 eligible files, 10 MB of source and 10,000 chunks; individual files over 256 KB are skipped. A process restart can leave an import marked as loading: delete that entry and import again. Run this on a long-lived local Node server, not a short-timeout serverless function. This is not a distributed indexing service.
+- Generated files, dependencies, binaries and lockfiles are excluded. Source, documentation, package manifests and workflow configuration are useful context. The answer is not a full static analysis of the repository.
+- OpenAI is the supported provider. The older experimental Ollama pull request is not part of this release.
 
+## Development and checks
 
-### Interact with Your Repository
+See [CONTRIBUTING.md](CONTRIBUTING.md) for test commands and fixture boundaries, and [upgrade notes](docs/modernization.md) for dependency choices. The CI workflow checks lint, types, tests, migrations, a production build and browser flows. Tests use mocked external APIs, not live OpenAI credentials.
 
-- Navigate to the **Chat** section to start a conversation with your codebase.
-- Ask questions like "How is the authentication implemented?" or "List all the endpoints in the API."
+## Support
 
-## Roadmap 🛣️
+[Report a bug](https://github.com/mbarinov/repogpt/issues) with reproduction steps and sanitized logs. Never attach API keys, private source, or database dumps. For sensitive reports, email [me@maxbarinov.com](mailto:me@maxbarinov.com).
 
-- [ ] **LangChain AI ReAct Agent Integration** – Incorporate LangChain's ReAct Agent for deeper analysis.
-- [ ] **Enhanced GitHub Integration** – Improve interaction with GitHub APIs for more seamless operations.
-- [ ] **Support Ollama local models** – Enable integration with Ollama's 
-  local models for AI capabilities.
-- [ ] **Support for Other VCS** – Integrate with other version control systems like GitLab and Bitbucket.
-
-## Contributing 🤝
-
-We love contributions! Please check out our [Contributing Guide](CONTRIBUTING.md) to get started.
-
-## Support 📫
-
-- **Issues** – Feel free to [open an issue](https://github.com/mbarinov/repogpt/issues) if you encounter any problems.
-- **Discussions** – Join our [GitHub Discussions](https://github.com/mbarinov/repogpt/discussions) for questions and community support.
-- **Email** – For any other inquiries, contact us at [me@maxbarinov.com].
-
-## License 📝
-
-This project is licensed under the [MIT License](LICENSE).
-
----
-
-*Made with ❤️ by [Max Barinov](https://maxbarinov.com)*
-
----
-
-### Keywords
-
-AI-powered GitHub assistant, natural language repo management, open-source, developer tools, machine learning, codebase exploration, pgvector, PostgreSQL, OpenAI.
-
----
-
-
-[![Star History Chart](https://api.star-history.com/svg?repos=mbarinov/repogpt&type=Date)](https://star-history.com/#mbarinov/repogpt&Date)
+[MIT](LICENSE) · [Max Barinov](https://maxbarinov.com)
