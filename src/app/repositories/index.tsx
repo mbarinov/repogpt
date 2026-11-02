@@ -13,13 +13,24 @@ export function RepoPage({ list }: { list: Repository[] }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const importBusy = useRef(false);
   const trigger = useRef<HTMLButtonElement>(null);
+  const returnFocus = useRef<HTMLElement | null>(null);
+  const openImport = (url: string) => {
+    returnFocus.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+    setImportUrl(url);
+  };
   useEffect(() => {
     if (importUrl !== null) dialog.current?.showModal();
   }, [importUrl]);
   const closeImport = () => {
     dialog.current?.close();
     setImportUrl(null);
-    trigger.current?.focus();
+    (returnFocus.current?.isConnected
+      ? returnFocus.current
+      : trigger.current
+    )?.focus();
   };
   const [error, setError] = useState("");
   const mounted = useRef(true);
@@ -66,7 +77,7 @@ export function RepoPage({ list }: { list: Repository[] }) {
         <Button
           ref={trigger}
           className="library-import"
-          onClick={() => setImportUrl("")}
+          onClick={() => openImport("")}
         >
           <GitHubLogoIcon width={28} height={28} />
           Import repository
@@ -123,7 +134,7 @@ export function RepoPage({ list }: { list: Repository[] }) {
         </dialog>
       )}
       <List
-        onImport={(repo) => setImportUrl(repo.url)}
+        onImport={(repo) => openImport(repo.url)}
         repos={repos}
         onDelete={async (id) => {
           const response = await fetch(

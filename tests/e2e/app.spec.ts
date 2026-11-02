@@ -20,9 +20,10 @@ const browserErrors: string[] = [];
 async function capture(page: Page, name: string) {
   if (process.env.UPDATE_SCREENSHOTS !== "1") return;
   await mkdir("docs/images", { recursive: true });
+  await page.mouse.move(0, 0);
   await page.screenshot({
     path: `docs/images/${name}.png`,
-    fullPage: true,
+    fullPage: !name.startsWith("import"),
     animations: "disabled",
   });
 }

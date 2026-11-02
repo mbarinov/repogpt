@@ -292,7 +292,8 @@ function RepositoryDetail({
                 variant="destructive"
                 size="sm"
               >
-                <Trash2 size={16} />
+                <Trash2 size={16} className="mr-2" />
+                Remove local repository
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
