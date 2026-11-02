@@ -49,7 +49,14 @@ describe("indexing lifecycle", () => {
     );
     expect(replace).toHaveBeenCalledWith(
       "repo",
-      ["test source"],
+      [
+        expect.objectContaining({
+          content: "test source",
+          path: null,
+          commitSha: null,
+          context: "",
+        }),
+      ],
       [Array(1536).fill(0.1)],
       db,
     );

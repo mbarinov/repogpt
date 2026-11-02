@@ -1,5 +1,6 @@
 import { Document } from "@langchain/core/documents";
 import { RequestError } from "@/lib/server/errors";
+import { languageForPath } from "./chunking";
 
 const MAX_FILES = 2000;
 const MAX_FILE_BYTES = 256_000;
@@ -131,9 +132,21 @@ export async function loadGithubDocuments(
   const selectedBranch = branch ?? (await get("")).default_branch;
   if (typeof selectedBranch !== "string")
     throw new RequestError("GitHub did not return a default branch.", 502);
-  const tree = await get(
-    `/git/trees/${encodeURIComponent(selectedBranch)}?recursive=1`,
-  );
+  // Resolve the mutable branch once; tree and blob reads belong to this snapshot.
+  const commit = await get(`/commits/${encodeURIComponent(selectedBranch)}`);
+  const commitSha = commit.sha;
+  const treeSha = commit.commit?.tree?.sha;
+  if (
+    typeof commitSha !== "string" ||
+    !/^[a-f0-9]{40,64}$/i.test(commitSha) ||
+    typeof treeSha !== "string" ||
+    !/^[a-f0-9]{40,64}$/i.test(treeSha)
+  )
+    throw new RequestError(
+      "GitHub returned an invalid snapshot reference.",
+      502,
+    );
+  const tree = await get(`/git/trees/${treeSha}?recursive=1`);
   if (tree.truncated)
     throw new RequestError(
       "This repository is too large to index completely. Choose a smaller repository.",
@@ -193,7 +206,13 @@ export async function loadGithubDocuments(
         if (!content.trim() || content.includes("\uFFFD")) return null;
         return new Document({
           pageContent: content,
-          metadata: { source: entry.path, sha: entry.sha },
+          metadata: {
+            source: entry.path,
+            path: entry.path,
+            language: languageForPath(entry.path),
+            blobSha: entry.sha,
+            commitSha,
+          },
         });
       }),
     );

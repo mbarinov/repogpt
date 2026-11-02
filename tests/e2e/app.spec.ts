@@ -2,6 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { mkdir } from "node:fs/promises";
+import type { SourceMetadata } from "../../src/services/indexer/citations";
 
 const database = new PrismaClient({
   adapter: new PrismaPg({ connectionString: process.env.TEST_DATABASE_URL }),
@@ -212,10 +213,27 @@ test("deletion can be cancelled, keeps an error open, then deletes real indexed 
   ).toBeNull();
 });
 
-function streamReply(text: string, id: string) {
+const sourceFixture: SourceMetadata = {
+  sources: [
+    {
+      id: "S1",
+      path: "package.json",
+      startLine: 1,
+      endLine: 12,
+      url: `https://github.com/example/fixture/blob/${"c".repeat(40)}/package.json#L1-L12`,
+    },
+  ],
+  hasLegacySources: false,
+};
+
+function streamReply(text: string, id: string, metadata?: SourceMetadata) {
   return (
     [
-      { type: "start", messageId: id },
+      {
+        type: "start",
+        messageId: id,
+        ...(metadata ? { messageMetadata: metadata } : {}),
+      },
       { type: "start-step" },
       { type: "text-start", id: "text-1" },
       { type: "text-delta", id: "text-1", delta: text },
@@ -246,9 +264,10 @@ test("chat renders streamed text and sends the next turn with conversation histo
       },
       body: streamReply(
         requests.length === 1
-          ? "RepoGPT uses Next.js and React for the interface, LangChain for embeddings, and PostgreSQL with pgvector for repository search.\n\nRun it locally with Node.js 24 and configure your API keys in Settings."
+          ? "RepoGPT uses Next.js and React for the interface, LangChain for embeddings, and PostgreSQL with pgvector for repository search. [S1](#source-S1)\n\nRun it locally with Node.js 24 and configure your API keys in Settings."
           : "The database stores repository documents and their embedding vectors. Retrieval is scoped to the selected repository.",
         `fixture-answer-${requests.length}`,
+        requests.length === 1 ? sourceFixture : undefined,
       ),
     });
   });
@@ -276,6 +295,12 @@ test("chat renders streamed text and sends the next turn with conversation histo
     "assistant",
     "user",
   ]);
+  await expect(
+    page.getByRole("link", { name: "S1", exact: true }),
+  ).toHaveAttribute("href", sourceFixture.sources[0].url);
+  await expect(
+    page.getByRole("region", { name: "Retrieved sources" }),
+  ).toHaveCount(1);
   await capture(page, "chat");
   await page.setViewportSize({ width: 390, height: 844 });
   await noOverflow(page);
@@ -478,4 +503,102 @@ test("failed refresh keeps old index chat available and retry opens a prefilled 
   await expect(page.getByRole("status")).toContainText(
     "chat uses the previous index",
   );
+});
+
+test("citations use trusted metadata and do not survive clear or repository switching", async ({
+  page,
+}) => {
+  const secondRepoId = "e2e-second";
+  await database.repository.create({
+    data: {
+      id: secondRepoId,
+      name: "example/other",
+      url: "https://github.com/example/other",
+      status: "IMPORTED",
+    },
+  });
+  const requests: {
+    selectedRepoId: string;
+    messages: { role: string; parts: { type: string; text?: string }[] }[];
+  }[] = [];
+  await page.route("**/api/chat", async (route) => {
+    requests.push(route.request().postDataJSON());
+    const isLegacy = requests.length === 2;
+    await route.fulfill({
+      status: 200,
+      headers: {
+        "content-type": "text/event-stream",
+        "x-vercel-ai-ui-message-stream": "v1",
+      },
+      body: streamReply(
+        isLegacy
+          ? "Legacy text without a location."
+          : "Verified [S1](#source-S1). Ignore [unknown](#source-S99) and [fabricated](https://github.com/example/fixture/blob/main/fake.ts).",
+        `citations-${requests.length}`,
+        isLegacy ? { sources: [], hasLegacySources: true } : sourceFixture,
+      ),
+    });
+  });
+  await page.goto(`/?repoId=${fixtureId}`);
+  const input = page.getByLabel("Message", { exact: true });
+  const send = page.getByRole("button", { name: "Send", exact: true });
+  await input.fill("Where is the package definition?");
+  await send.click();
+  await expect(
+    page.getByRole("link", { name: "S1", exact: true }),
+  ).toHaveAttribute("href", sourceFixture.sources[0].url);
+  await expect(
+    page.getByRole("link", { name: /package\.json:1/ }),
+  ).toHaveAttribute("href", sourceFixture.sources[0].url);
+  await expect(
+    page.getByRole("link", { name: "unknown", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("link", { name: "fabricated", exact: true }),
+  ).toHaveCount(0);
+  await input.fill("What about older excerpts?");
+  await send.click();
+  await expect(
+    page.getByText(/Refresh the repository index to enable source links/),
+  ).toBeVisible();
+  expect(requests[1].messages.map((message) => message.role)).toEqual([
+    "user",
+    "assistant",
+    "user",
+  ]);
+  // The transport retains the answer text; citation metadata is not concatenated into it.
+  expect(
+    requests[1].messages[1].parts
+      .filter((part) => part.type === "text")
+      .map((part) => part.text)
+      .join(""),
+  ).not.toContain(sourceFixture.sources[0].url);
+  await page.getByRole("button", { name: "Clear", exact: true }).click();
+  await expect(
+    page.getByRole("region", { name: "Retrieved sources" }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByText(/Refresh the repository index to enable source links/),
+  ).toHaveCount(0);
+  await input.fill("Show the source again.");
+  await send.click();
+  await expect(
+    page.getByRole("link", { name: "S1", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("combobox", { name: "Repository", exact: true }).click();
+  await page
+    .getByRole("option", { name: "example/other", exact: true })
+    .click();
+  await expect(
+    page.getByRole("region", { name: "Retrieved sources" }),
+  ).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "S1", exact: true })).toHaveCount(
+    0,
+  );
+  await expect(input).toHaveValue("");
+  await input.fill("Describe this repository.");
+  await send.click();
+  await expect.poll(() => requests.length).toBe(4);
+  expect(requests[3].selectedRepoId).toBe(secondRepoId);
+  expect(requests[3].messages.map((message) => message.role)).toEqual(["user"]);
 });

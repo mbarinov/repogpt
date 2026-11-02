@@ -41,11 +41,11 @@
     "tailwindcss-animate": "1.0.7",
     "@prisma/adapter-pg": "7.10.1",
     "pg": "8.23.1",
-    "@langchain/textsplitters": "1.0.2",
     "@ai-sdk/react": "4.0.163",
     "@ai-sdk/openai": "4.0.106",
     "dotenv": "18.0.9",
-    "zod": "4.6.7"
+    "zod": "4.6.7",
+    "typescript": "6.0.3"
   },
   "devDependencies": {
     "@types/node": "24.19.2",
@@ -55,7 +55,6 @@
     "eslint-config-next": "16.4.4",
     "postcss": "8.5.32",
     "tailwindcss": "4.3.3",
-    "typescript": "6.0.3",
     "@types/pg": "8.23.1",
     "@tailwindcss/postcss": "4.3.3",
     "vitest": "5.1.0",

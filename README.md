@@ -3,7 +3,7 @@
 [![CI](https://github.com/mbarinov/repogpt/actions/workflows/ci.yml/badge.svg)](https://github.com/mbarinov/repogpt/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/mbarinov/repogpt)](LICENSE)
 
-Chat with a GitHub codebase. RepoGPT imports source files and useful configuration, splits them into chunks, and stores OpenAI embeddings in PostgreSQL with pgvector. Questions retrieve relevant chunks and stream an answer grounded in that repository.
+Chat with a GitHub codebase. RepoGPT imports source files and useful configuration, splits them into chunks, and stores OpenAI embeddings in PostgreSQL with pgvector. Questions combine semantic and lexical retrieval, then stream an answer with source links grounded in the retrieved repository snapshot.
 
 Built with Next.js, React, Vercel AI SDK, LangChain, and Prisma. Designed for **one person running it locally**, not as a public hosted service.
 
@@ -76,6 +76,12 @@ Before upgrading an existing installation, back up your database. Install with t
 - Imports run within an HTTP request, not a durable job queue. Imports are limited to 2,000 eligible files, 10 MB of source and 10,000 chunks; individual files over 256 KB are skipped. A process restart can leave an import marked as loading: delete that entry and import again. Run this on a long-lived local Node server, not a short-timeout serverless function. This is not a distributed indexing service.
 - Generated files, dependencies, binaries and lockfiles are excluded. Source, documentation, package manifests and workflow configuration are useful context. The answer is not a full static analysis of the repository.
 - OpenAI is the supported provider. The older experimental Ollama pull request is not part of this release.
+
+## Source-aware indexing and search
+
+TS/JS chunks follow declaration boundaries, Markdown follows sections, and other formats use a bounded fallback. Source paths and original line ranges point to the exact indexed commit. Hybrid PostgreSQL search combines embeddings with exact identifier/path/error-text lookup; it does not require another search service.
+
+Existing indexes remain searchable after migration. They cannot gain accurate source links retroactively: refresh a repository to rebuild its provenance. Legacy excerpts are explicitly labeled, never given fabricated locations. See [retrieval and migration notes](docs/grounded-retrieval.md) for limits, trade-offs and test evidence.
 
 ## Development and checks
 

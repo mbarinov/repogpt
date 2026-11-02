@@ -1,7 +1,8 @@
 import React, { useEffect, useRef } from "react";
 import { Message } from "@/components/message";
+import type { SourceMetadata } from "@/services/indexer/citations";
 
-interface Message {
+interface Message extends Partial<SourceMetadata> {
   id: string;
   role: string;
   content: string;
@@ -34,6 +35,8 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
             id={message.id}
             role={message.role}
             content={message.content}
+            sources={message.sources}
+            hasLegacySources={message.hasLegacySources}
           />
         ))}
         <div ref={messagesEndRef} />

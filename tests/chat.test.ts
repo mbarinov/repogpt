@@ -108,7 +108,11 @@ describe("chat request validation", () => {
       role: "user",
       content: "How does it work?",
     });
-    expect(mocks.search).toHaveBeenCalledWith("repo", [1, 2]);
+    expect(mocks.search).toHaveBeenCalledWith(
+      "repo",
+      [1, 2],
+      "How does it work?",
+    );
   });
   it("accepts SDK step markers on assistant history and preserves follow-up roles", async () => {
     const history = [
@@ -140,6 +144,24 @@ describe("chat request validation", () => {
         .status,
     ).toBe(200);
     expect(mocks.stream.mock.calls[0][0].messages).toHaveLength(3);
+  });
+  it("does not promote client-supplied citation metadata into model context", async () => {
+    const history = [
+      message,
+      {
+        id: "assistant",
+        role: "assistant",
+        parts: [{ type: "text", text: "An answer." }],
+        metadata: {
+          sources: [{ id: "S1", url: "https://evil.test/invented" }],
+        },
+      },
+      { ...message, id: "next" },
+    ];
+    await POST(request({ selectedRepoId: "repo", messages: history }));
+    expect(JSON.stringify(mocks.stream.mock.calls[0][0])).not.toContain(
+      "evil.test",
+    );
   });
   it("redacts downstream errors", async () => {
     mocks.embed.mockRejectedValueOnce(
