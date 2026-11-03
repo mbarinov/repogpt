@@ -4,7 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, MessageSquare, CheckCircle2 } from "lucide-react";
 import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport } from "ai";
+import { DefaultChatTransport, type UIMessage } from "ai";
+import type { SourceMetadata } from "@/services/indexer/citations";
 import type { Repository } from "@prisma/client";
 import { MessageList } from "@/components/message-list";
 import { MessageInput } from "@/components/message-input";
@@ -63,7 +64,7 @@ function Conversation({
     stop,
     regenerate,
     clearError,
-  } = useChat({
+  } = useChat<UIMessage<SourceMetadata>>({
     transport: new DefaultChatTransport({
       api: "/api/chat",
       body: { selectedRepoId },
@@ -136,6 +137,8 @@ function Conversation({
           messages={messages.map((message) => ({
             id: message.id,
             role: message.role,
+            sources: message.metadata?.sources,
+            hasLegacySources: message.metadata?.hasLegacySources,
             content: message.parts
               .filter((part) => part.type === "text")
               .map((part) => part.text)

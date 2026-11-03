@@ -1,4 +1,3 @@
-import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import type { Document } from "@langchain/core/documents";
 import { Prisma, type PrismaClient } from "@prisma/client";
@@ -14,23 +13,13 @@ import {
 
 export const EMBEDDING_BATCH_SIZE = 32;
 const MAX_CHUNKS = 10_000;
-export function sanitizeContent(content: string): string {
-  return content
-    .replace(/\0/g, "")
-    .replace(
-      /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g,
-      "",
-    )
-    .trim();
-}
-export async function prepareChunks(documents: Document[]): Promise<string[]> {
-  const splitter = new RecursiveCharacterTextSplitter({
-    chunkSize: 2000,
-    chunkOverlap: 200,
-  });
-  const chunks = (await splitter.splitDocuments(documents))
-    .map((chunk) => sanitizeContent(chunk.pageContent))
-    .filter(Boolean);
+export { sanitizeContent } from "./chunking";
+import { splitDocument } from "./chunking";
+import { MAX_CHUNK_CHARACTERS, type SourceChunk } from "./types";
+export async function prepareChunks(
+  documents: Document[],
+): Promise<SourceChunk[]> {
+  const chunks = documents.flatMap(splitDocument);
   if (!chunks.length)
     throw new RequestError(
       "No indexable text was found in this repository.",
@@ -51,7 +40,9 @@ export async function embedChunks(
   const vectors: number[][] = [];
   for (let offset = 0; offset < chunks.length; offset += EMBEDDING_BATCH_SIZE) {
     const batch = chunks.slice(offset, offset + EMBEDDING_BATCH_SIZE);
-    if (batch.some((text) => !text.trim() || text.length > 2000))
+    if (
+      batch.some((text) => !text.trim() || text.length > MAX_CHUNK_CHARACTERS)
+    )
       throw new RequestError("Invalid embedding input.", 422);
     const result = await embed(batch);
     if (result.length !== batch.length)
@@ -91,8 +82,11 @@ export class Indexer {
         maxRetries: 2,
         timeout: 30_000,
       });
-      const vectors = await embedChunks(chunks, (texts) =>
-        embeddings.embedDocuments(texts),
+      const vectors = await embedChunks(
+        chunks.map((chunk) =>
+          [chunk.context, chunk.content].filter(Boolean).join("\n\n"),
+        ),
+        (texts) => embeddings.embedDocuments(texts),
       );
       await replaceDocuments(repositoryId, chunks, vectors, this.db);
     } catch (error) {

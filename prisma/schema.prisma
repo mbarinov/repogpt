@@ -19,15 +19,24 @@ model StoreSettings {
 }
 
 model Document {
-  id         String                 @id @default(cuid())
-  content    String
-  namespace  String                 @default("default")
-  vector     Unsupported("vector")?
-  createdAt  DateTime               @default(now())
-  updatedAt  DateTime               @updatedAt
-  repository Repository             @relation(fields: [namespace], references: [id], onDelete: Cascade)
+  id           String                   @id @default(cuid())
+  content      String
+  context      String                   @default("")
+  path         String?
+  language     String?
+  startLine    Int?
+  endLine      Int?
+  blobSha      String?
+  commitSha    String?
+  searchVector Unsupported("tsvector")? @default(dbgenerated())
+  namespace    String                   @default("default")
+  vector       Unsupported("vector")?
+  createdAt    DateTime                 @default(now())
+  updatedAt    DateTime                 @updatedAt
+  repository   Repository               @relation(fields: [namespace], references: [id], onDelete: Cascade)
 
   @@index([namespace])
+  @@index([searchVector], type: Gin)
 }
 
 model Repository {

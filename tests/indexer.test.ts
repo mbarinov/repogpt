@@ -68,9 +68,14 @@ describe("repository inputs", () => {
 describe("GitHub loading (issue #11 regression coverage; mocked API)", () => {
   it("sends Bearer authorization for fine-grained PATs, uses default branch and immutable blobs", async () => {
     const sha = "a".repeat(40);
+    const commitSha = "c".repeat(40);
+    const treeSha = "d".repeat(40);
     const request = vi
       .fn<typeof fetch>()
       .mockResolvedValueOnce(Response.json({ default_branch: "develop" }))
+      .mockResolvedValueOnce(
+        Response.json({ sha: commitSha, commit: { tree: { sha: treeSha } } }),
+      )
       .mockResolvedValueOnce(
         Response.json({
           tree: [
@@ -97,10 +102,17 @@ describe("GitHub loading (issue #11 regression coverage; mocked API)", () => {
       request,
     );
     expect(docs[0].metadata.source).toBe("package.json");
-    expect(request.mock.calls[1][0]).toContain(
-      "/git/trees/develop?recursive=1",
+    expect(request.mock.calls[1][0]).toContain("/commits/develop");
+    expect(request.mock.calls[2][0]).toContain(
+      `/git/trees/${treeSha}?recursive=1`,
     );
-    expect(request.mock.calls[2][0]).toContain(`/git/blobs/${sha}`);
+    expect(request.mock.calls[3][0]).toContain(`/git/blobs/${sha}`);
+    expect(docs[0].metadata).toMatchObject({
+      path: "package.json",
+      language: "json",
+      blobSha: sha,
+      commitSha,
+    });
     expect(request.mock.calls[0][1]?.headers).toMatchObject({
       Authorization: "Bearer test-token",
     });
@@ -131,7 +143,13 @@ describe("GitHub loading (issue #11 regression coverage; mocked API)", () => {
   it("rejects truncated trees instead of claiming a complete index", async () => {
     const request = vi
       .fn<typeof fetch>()
-      .mockResolvedValue(Response.json({ tree: [], truncated: true }));
+      .mockResolvedValueOnce(
+        Response.json({
+          sha: "c".repeat(40),
+          commit: { tree: { sha: "d".repeat(40) } },
+        }),
+      )
+      .mockResolvedValueOnce(Response.json({ tree: [], truncated: true }));
     await expect(
       loadGithubDocuments("https://github.com/a/b", "token", "main", request),
     ).rejects.toThrow("too large");
@@ -166,9 +184,25 @@ describe("embedding input safety (issue #7 regression coverage; no provider repr
   it("validates all vectors before entering the replacement transaction", async () => {
     const transaction = vi.fn();
     await expect(
-      replaceDocuments("repo", ["a"], [[]], {
-        $transaction: transaction,
-      } as unknown as PrismaClient),
+      replaceDocuments(
+        "repo",
+        [
+          {
+            content: "a",
+            path: null,
+            language: null,
+            startLine: null,
+            endLine: null,
+            blobSha: null,
+            commitSha: null,
+            context: "",
+          },
+        ],
+        [[]],
+        {
+          $transaction: transaction,
+        } as unknown as PrismaClient,
+      ),
     ).rejects.toThrow();
     expect(transaction).not.toHaveBeenCalled();
   });

@@ -78,7 +78,12 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)(
             const url = String(input);
             if (url.endsWith("/project"))
               return Response.json({ default_branch: "trunk" });
-            if (url.includes("/git/trees/trunk"))
+            if (url.endsWith("/commits/trunk"))
+              return Response.json({
+                sha: "c".repeat(40),
+                commit: { tree: { sha: "d".repeat(40) } },
+              });
+            if (url.includes(`/git/trees/${"d".repeat(40)}`))
               return Response.json({
                 tree: [
                   {
@@ -111,7 +116,7 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)(
         expect(
           await database.document.count({ where: { namespace: id } }),
         ).toBeGreaterThan(0);
-        expect(github).toHaveBeenCalledTimes(3);
+        expect(github).toHaveBeenCalledTimes(4);
         fixture.stream.mockReturnValue({
           toUIMessageStreamResponse: () =>
             new Response("fixture streamed reply"),
